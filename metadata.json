@@ -1,0 +1,6 @@
+{
+  "name": "CultureLens",
+  "description": "Discover Nigerian cultural heritage, understand the stories behind traditional crafts, and connect with local artisans. Created by Team Àṣà.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
