@@ -53,6 +53,7 @@ export const Navbar: React.FC = () => {
                 <button
                   key={item.path}
                   onClick={() => handleNav(item.path)}
+                  aria-current={active ? 'page' : undefined}
                   className={`whitespace-nowrap shrink-0 transition-colors py-2 relative text-sm ${
                     active
                       ? 'text-[#34205B] font-semibold'
@@ -102,6 +103,7 @@ export const Navbar: React.FC = () => {
               <button
                 key={item.path}
                 onClick={() => handleNav(item.path)}
+                aria-current={isActive(item.path) ? 'page' : undefined}
                 className={`text-left px-3 py-2.5 text-base rounded-md font-medium transition-colors ${
                   isActive(item.path)
                     ? 'bg-[#34205B] text-white'

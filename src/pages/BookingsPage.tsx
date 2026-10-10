@@ -42,27 +42,28 @@ export const BookingsPage: React.FC = () => {
 
       <div className="space-y-3">
         <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-          PRACTICAL ENGAGEMENT & VERIFICATION
+          LOCAL DEMO REQUEST LOOKUP
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium tracking-tight">
           Booking Status Lookup
         </h1>
         <p className="text-sm text-stone-600 leading-relaxed">
-          Verify your workshop reservation status, session schedule, and payment state using your unique CultureLens reference code.
+          This browser-only demo can look up sample booking requests created here. It cannot confirm a real reservation or payment. Use placeholder contact details only; do not enter real personal information.
         </p>
       </div>
 
       {/* Search Input Box */}
       <form onSubmit={handleLookup} className="bg-white p-6 rounded-2xl border-2 border-[#D7C8B3] shadow-sm space-y-3">
-        <label className="block text-xs font-mono uppercase tracking-wider text-stone-700">
-          ENTER BOOKING REFERENCE NUMBER
+        <label htmlFor="booking-reference" className="block text-xs font-mono uppercase tracking-wider text-stone-700">
+          ENTER A LOCAL DEMO REFERENCE
         </label>
         <div className="relative flex items-center">
           <input
+            id="booking-reference"
             type="text"
             value={referenceInput}
             onChange={(e) => setReferenceInput(e.target.value)}
-            placeholder="e.g. CL-BK-89210"
+            placeholder="CL-BK-XXXXX"
             className="w-full py-3 pl-4 pr-28 text-sm sm:text-base font-mono uppercase rounded-lg border border-[#D7C8B3] text-[#241F2B] focus:outline-none focus:ring-2 focus:ring-[#34205B]"
           />
           <button
@@ -70,16 +71,16 @@ export const BookingsPage: React.FC = () => {
             disabled={loading || !referenceInput.trim()}
             className="absolute right-2 px-5 py-2 text-xs sm:text-sm font-medium text-white bg-[#34205B] hover:bg-[#251642] disabled:opacity-50 rounded-md transition-colors cursor-pointer"
           >
-            {loading ? 'Checking...' : 'Lookup'}
+            {loading ? 'Checking...' : 'Search local demos'}
           </button>
         </div>
         <p className="text-[11px] text-stone-500 font-sans">
-          Tip: You can test with default seeded reference <code className="font-mono text-stone-800 bg-stone-100 px-1 py-0.5 rounded">CL-BK-89210</code> or any reference code issued during workshop reservation.
+          Only demo requests created in this browser can be looked up. There is no pre-seeded booking reference.
         </p>
       </form>
 
       {/* Result Display */}
-      {searched && (
+      {searched && !loading && (
         <div className="animate-in fade-in duration-200">
           {booking ? (
             <div className="bg-white rounded-2xl border border-[#D7C8B3] p-6 sm:p-8 space-y-6 shadow-sm">
@@ -96,7 +97,7 @@ export const BookingsPage: React.FC = () => {
 
                 <div className="text-right">
                   <span className="text-[11px] font-mono uppercase tracking-wider text-stone-500 block">
-                    RESERVATION STATE
+                    SAMPLE STATE · NOT CONFIRMED
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 bg-amber-100/70 px-2.5 py-1 rounded">
                     {booking.status.replace('_', ' ').toUpperCase()}
@@ -122,18 +123,7 @@ export const BookingsPage: React.FC = () => {
                 </div>
 
                 <div className="p-4 bg-white rounded-xl border border-stone-200 space-y-2">
-                  <div className="flex justify-between py-1 border-b border-stone-100">
-                    <span className="text-stone-500">Guest Name</span>
-                    <span className="font-medium">{booking.guestName}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-100">
-                    <span className="text-stone-500">Contact Email</span>
-                    <span className="font-medium">{booking.guestEmail}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-stone-100">
-                    <span className="text-stone-500">Telephone</span>
-                    <span className="font-medium">{booking.guestPhone}</span>
-                  </div>
+                  <p className="text-stone-500">Guest contact details are hidden in this demo.</p>
                   <div className="flex justify-between py-1 border-b border-stone-100">
                     <span className="text-stone-500">Participants</span>
                     <span className="font-medium">{booking.participantCount} Participant(s)</span>
@@ -149,10 +139,10 @@ export const BookingsPage: React.FC = () => {
               <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-2 text-xs text-stone-700">
                 <div className="flex items-center gap-2 font-medium text-stone-900">
                   <ShieldCheck className="w-4 h-4 text-[#8A68C7]" />
-                  <span>Backend Payment Integration Boundary</span>
+                  <span>Demo Status · No Payment Service</span>
                 </div>
                 <p className="leading-relaxed">
-                  Payment Status: <strong className="font-mono text-[#34205B]">{booking.paymentStatus.toUpperCase()}</strong> ({booking.paymentProvider}). In accordance with PRD specifications, bookings are marked as paid exclusively after server-side reconciliation with ALATPay.
+                  This local sample request is <strong>{booking.status.replace('_', ' ')}</strong>; that is not a confirmed reservation. No payment was initiated or received, and the payment status shown here is only fixture data ({booking.paymentStatus.toUpperCase()}).
                 </p>
               </div>
 
@@ -160,13 +150,17 @@ export const BookingsPage: React.FC = () => {
           ) : (
             <div className="bg-white rounded-2xl border border-stone-200 p-8 text-center space-y-3">
               <AlertCircle className="w-8 h-8 text-stone-400 mx-auto" />
-              <h3 className="font-serif text-lg text-stone-900">No Booking Found</h3>
+              <h3 className="font-serif text-lg text-stone-900">No Local Demo Request Found</h3>
               <p className="text-xs text-stone-500">
-                We could not find a reservation record associated with reference "{referenceInput}". Please check your code.
+                This browser has no saved demo record with reference "{referenceInput}". Real booking systems are not connected.
               </p>
             </div>
           )}
         </div>
+      )}
+
+      {searched && loading && (
+        <p role="status" className="text-center text-sm text-stone-600">Checking local demo data…</p>
       )}
 
     </div>

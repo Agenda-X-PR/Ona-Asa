@@ -9,6 +9,8 @@ export const ExperiencesPage: React.FC = () => {
   const [experiences, setExperiences] = useState<CulturalExperience[]>([]);
   const [artisansMap, setArtisansMap] = useState<Record<string, ArtisanProfile>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -23,6 +25,7 @@ export const ExperiencesPage: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setLoadError(false);
 
     const catParam = categoryFilter === 'All Categories' ? '' : categoryFilter;
     apiService.getExperiences(catParam).then(async (data) => {
@@ -51,12 +54,17 @@ export const ExperiencesPage: React.FC = () => {
       setArtisansMap(aMap);
       setExperiences(filtered);
       setLoading(false);
+    }).catch(() => {
+      if (isMounted) {
+        setLoadError(true);
+        setLoading(false);
+      }
     });
 
     return () => {
       isMounted = false;
     };
-  }, [categoryFilter, searchQuery]);
+  }, [categoryFilter, searchQuery, retryCount]);
 
   const handleReset = () => {
     setCategoryFilter('');
@@ -75,7 +83,7 @@ export const ExperiencesPage: React.FC = () => {
           Cultural Experiences
         </h1>
         <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
-          Learn directly from traditional masters through intimate, respectful atelier workshops. Every experience compensates artisans directly and provides authentic cultural context.
+          Preview illustrative workshop listings and their booking interface. These sample sessions are not confirmed, bookable, or evidence of artisan participation or compensation.
         </p>
       </div>
 
@@ -119,9 +127,9 @@ export const ExperiencesPage: React.FC = () => {
         </div>
 
         <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500 font-sans">
-          <span>Showing {experiences.length} curated workshops</span>
+          <span>Showing {experiences.length} sample workshops</span>
           <span className="font-mono text-[11px] text-[#8A68C7]">
-            DIRECT ARTISAN REMUNERATION
+            ILLUSTRATIVE FIXTURES · NOT BOOKABLE
           </span>
         </div>
       </div>
@@ -133,6 +141,11 @@ export const ExperiencesPage: React.FC = () => {
           <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
             Loading cultural experiences...
           </p>
+        </div>
+      ) : loadError ? (
+        <div role="alert" className="bg-rose-50 rounded-xl border border-rose-200 p-8 text-center max-w-xl mx-auto space-y-4">
+          <p className="text-sm text-rose-900">The local sample workshop data could not be loaded.</p>
+          <button onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md">Retry</button>
         </div>
       ) : experiences.length === 0 ? (
         <div className="bg-white rounded-xl border border-[#D7C8B3] p-12 text-center max-w-xl mx-auto space-y-4">
@@ -151,11 +164,7 @@ export const ExperiencesPage: React.FC = () => {
             const nextSession = exp.sessions.find(s => s.status === 'available');
 
             return (
-              <article
-                key={exp.id}
-                onClick={() => navigate(`/experiences/${exp.slug}`)}
-                className="group cursor-pointer bg-white rounded-xl border border-[#D7C8B3]/80 overflow-hidden hover:shadow-md hover:border-[#8A68C7] transition-all flex flex-col justify-between"
-              >
+              <article key={exp.id} className="group bg-white rounded-xl border border-[#D7C8B3]/80 overflow-hidden hover:shadow-md hover:border-[#8A68C7] transition-all flex flex-col justify-between">
                 <div>
                   <div className="relative aspect-[16/9] overflow-hidden bg-stone-100">
                     <img
@@ -175,12 +184,12 @@ export const ExperiencesPage: React.FC = () => {
 
                   <div className="p-6 space-y-3">
                     <h2 className="font-serif text-xl font-medium text-[#34205B] group-hover:text-[#8A68C7] transition-colors leading-snug">
-                      {exp.title}
+                      <a href={`#/experiences/${exp.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/experiences/${exp.slug}`); }} className="focus-visible:outline-none focus-visible:underline">{exp.title}</a>
                     </h2>
 
                     {artisan && (
                       <p className="text-xs text-stone-500 font-sans">
-                        Led by <strong className="text-stone-800 font-medium">{artisan.displayName}</strong> ({artisan.craft})
+                        Sample profile association · <strong className="text-stone-800 font-medium">{artisan.displayName}</strong> ({artisan.craft})
                       </p>
                     )}
 
@@ -197,7 +206,7 @@ export const ExperiencesPage: React.FC = () => {
 
                 <div className="px-6 py-4 border-t border-[#D7C8B3]/40 bg-[#FAF7F2] flex items-center justify-between">
                   <div>
-                    <span className="text-[11px] text-stone-500 block">Tuition per seat</span>
+                    <span className="text-[11px] text-stone-500 block">Sample price · not an offer</span>
                     <span className="font-mono text-base font-semibold text-[#34205B]">
                       ₦{exp.priceNaira.toLocaleString()}
                     </span>
@@ -206,7 +215,7 @@ export const ExperiencesPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     {nextSession && (
                       <span className="text-[11px] text-stone-500 font-mono hidden sm:inline">
-                        Next: {nextSession.date}
+                        Sample date: {nextSession.date}
                       </span>
                     )}
                     <button
@@ -216,7 +225,7 @@ export const ExperiencesPage: React.FC = () => {
                       }}
                       className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer"
                     >
-                      View & Book
+                      Preview details
                     </button>
                   </div>
                 </div>
@@ -230,7 +239,7 @@ export const ExperiencesPage: React.FC = () => {
       <div className="p-5 bg-white/70 rounded-xl border border-[#D7C8B3] text-xs text-stone-600 flex items-start gap-3">
         <ShieldCheck className="w-4 h-4 text-[#8A68C7] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong className="text-stone-800">Booking Integrity:</strong> All sessions feature explicit session capacities, transparent pricing in Nigerian Naira (NGN), and direct artisan workshop logistics. Payments will be reconciled through ALATPay once Member A’s backend payment verification services are connected.
+          <strong className="text-stone-800">Prototype notice:</strong> Dates, capacities, prices, locations, and artisan associations are illustrative fixtures only. No booking or payment service is connected, and these listings do not establish an artisan's participation or compensation.
         </p>
       </div>
 

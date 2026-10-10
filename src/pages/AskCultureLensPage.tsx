@@ -18,6 +18,7 @@ export const AskCultureLensPage: React.FC = () => {
   const { navigate } = useRouter();
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [response, setResponse] = useState<QnAResponse | null>(null);
   const [groundedRecords, setGroundedRecords] = useState<CulturalRecord[]>([]);
   const [associatedArtisans, setAssociatedArtisans] = useState<ArtisanProfile[]>([]);
@@ -45,6 +46,7 @@ export const AskCultureLensPage: React.FC = () => {
     if (!queryText.trim()) return;
     setLoading(true);
     setResponse(null);
+    setErrorMessage(null);
     setGroundedRecords([]);
     setAssociatedArtisans([]);
 
@@ -72,7 +74,7 @@ export const AskCultureLensPage: React.FC = () => {
         setAssociatedArtisans(artList);
       }
     } catch {
-      // Graceful fallback
+      setErrorMessage('The local sample response could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,24 +92,25 @@ export const AskCultureLensPage: React.FC = () => {
       <div className="space-y-3">
         <div className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
           <Sparkles className="w-4 h-4" />
-          <span>GEMMA AI · GROUNDED CULTURAL DISCOVERY</span>
+          <span>LOCAL SAMPLE Q&A · NO AI SERVICE</span>
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#34205B] font-medium tracking-tight">
           Ask CultureLens
         </h1>
         <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-          Inquire into Nigerian cultural practices, craft techniques, and historical origins. Answers are strictly grounded in verified platform archives. If verifiable evidence is absent or disputed, the system acknowledges the boundary rather than fabricating information.
+          Try the interface with canned keyword-matched sample responses. This prototype does not call Gemma, retrieve live records, or verify the sample answer text or citations.
         </p>
       </div>
 
       {/* Question Input Console */}
       <div className="bg-white p-6 rounded-2xl border-2 border-[#D7C8B3] shadow-sm space-y-4">
         <form onSubmit={handleSubmit} className="space-y-3">
-          <label className="block text-xs font-mono uppercase tracking-wider text-stone-500">
+          <label htmlFor="cultural-question" className="block text-xs font-mono uppercase tracking-wider text-stone-500">
             ENTER YOUR CULTURAL QUESTION
           </label>
           <div className="relative flex items-center">
             <input
+              id="cultural-question"
               type="text"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
@@ -150,8 +153,15 @@ export const AskCultureLensPage: React.FC = () => {
         <div className="p-8 bg-white rounded-xl border border-[#D7C8B3] text-center space-y-3 animate-pulse">
           <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-mono uppercase tracking-wider text-stone-600">
-            Retrieving verified records & evaluating evidence...
+            Loading local sample response...
           </p>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div role="alert" className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-900 flex items-center justify-between gap-4">
+          <span>{errorMessage}</span>
+          <button onClick={() => handleAsk(question)} className="shrink-0 underline font-medium">Retry</button>
         </div>
       )}
 
@@ -172,14 +182,18 @@ export const AskCultureLensPage: React.FC = () => {
           {/* Grounded Answer Body */}
           <div className="space-y-4">
             <span className="text-[11px] font-mono uppercase tracking-widest text-[#8A68C7]">
-              GROUNDED SYNTHESIS
+              SAMPLE RESPONSE · FIXTURE CONTENT
             </span>
             <div className="text-sm sm:text-base text-stone-800 leading-relaxed font-sans space-y-3">
               <p>{response.answer}</p>
             </div>
           </div>
 
-          {/* Uncertainty or Conflict Notes (PRD Requirement FR-025) */}
+          <p className="text-xs text-stone-500 border-t border-stone-100 pt-3">
+            Sample-data confidence label: <strong>{response.confidence.replaceAll('_', ' ')}</strong>. This value and response are not a live model evaluation.
+          </p>
+
+          {/* Uncertainty or Conflict Notes */}
           {response.uncertaintyOrDisputeNotes && (
             <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5 text-xs">
               <div className="flex items-center gap-1.5 text-amber-900 font-medium">
@@ -196,7 +210,7 @@ export const AskCultureLensPage: React.FC = () => {
           {groundedRecords.length > 0 && (
             <div className="space-y-3 pt-2 border-t border-[#D7C8B3]/50">
               <span className="text-[11px] font-mono uppercase tracking-wider text-stone-500 block">
-                RETRIEVED ARCHIVE SOURCES
+                RELATED SAMPLE RECORDS · NOT VERIFIED
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {groundedRecords.map((rec) => (
@@ -211,7 +225,7 @@ export const AskCultureLensPage: React.FC = () => {
                       </h4>
                       <p className="text-[11px] text-stone-500 mt-0.5">{rec.community}</p>
                       <span className="text-[10px] font-mono text-emerald-800 mt-1 block">
-                        VERIFIED ENTRY
+                        SAMPLE FIXTURE
                       </span>
                     </div>
                     <ArrowRight className="w-4 h-4 text-stone-400 group-hover:translate-x-1 transition-transform shrink-0 mt-1" />
@@ -225,7 +239,7 @@ export const AskCultureLensPage: React.FC = () => {
           {associatedArtisans.length > 0 && (
             <div className="space-y-3 pt-2 border-t border-[#D7C8B3]/50">
               <span className="text-[11px] font-mono uppercase tracking-wider text-stone-500 block">
-                CONNECTED LIVING ARTISANS
+                ASSOCIATED SAMPLE PROFILES · NOT VERIFIED
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {associatedArtisans.map((artisan) => (
@@ -263,7 +277,7 @@ export const AskCultureLensPage: React.FC = () => {
           <span>Architectural Integrity Notice</span>
         </div>
         <p className="leading-relaxed">
-          CultureLens strictly follows Team Àṣà’s AI principles. We do not use general-purpose ungrounded generation. Factual answers rely exclusively on retrieved platform records. When Member A deploys the backend Gemma adapter, real-time embedding matching will run directly on our PostgreSQL database.
+          This page currently uses a local keyword-to-fixture mapping. No AI model, archive retrieval, database, or reviewer service is connected. Any future Gemma integration must be provided by the backend and reviewed against approved sources before responses are presented as factual.
         </p>
       </div>
 

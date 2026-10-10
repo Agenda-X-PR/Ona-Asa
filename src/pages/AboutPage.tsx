@@ -11,7 +11,7 @@ export const AboutPage: React.FC = () => {
       {/* Hero Header */}
       <div className="space-y-4 max-w-3xl">
         <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-          TEAM ÀṢÀ · HACK FOR HUMANITY LAGOS 2026
+          Ọ̀NÀ ÀṢÀ · HACK FOR HUMANITY LAGOS 2026
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#34205B] font-medium tracking-tight">
           About CultureLens
@@ -28,15 +28,15 @@ export const AboutPage: React.FC = () => {
         </h2>
         
         <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
-          In Nigeria today, anyone interested in traditional narrow-loom weaving, natural indigo dyeing, ancient bronze metallurgy, or ceremonial beadwork encounters fragmented information. Explanations on social media or search engines often omit community origins, cite no historical sources, or present contested folklore as universal truth.
+          This project explores a design hypothesis: people may benefit from a respectful way to browse cultural records, understand their sources and uncertainty, and discover practitioner-led experiences. This prototype does not provide independent research supporting that hypothesis.
         </p>
 
         <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
-          Simultaneously, the master artisans who preserve these living traditions often lack dedicated, respectful digital platforms to present their stories, receive workshop inquiries, and earn fair livelihood without predatory middlemen.
+          Its intended direction is to make room for practitioner agency and consent. The profiles and workshop listings in this demonstration are fixtures; they do not represent confirmed makers, needs, consent, or economic arrangements.
         </p>
 
         <p className="text-sm sm:text-base text-stone-700 leading-relaxed font-medium text-[#34205B]">
-          CultureLens connects both worlds. We believe a cultural archive should lead to direct human engagement, and practical workshops should be grounded in documented history.
+          The product goal is to connect cultural information with practitioner-led engagement only after community review, permission, and operational infrastructure are in place.
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export const AboutPage: React.FC = () => {
               1. Provenance over Hallucination
             </h3>
             <p className="text-xs text-stone-600 leading-relaxed">
-              Every documented record specifies its academic citations, elder testimonies, or museum archive references. If evidence is missing or contested, CultureLens explicitly marks it rather than manufacturing certainty.
+              Future production records should provide reviewed citations and community context. The current records are illustrative fixtures; neither sources nor claims are independently verified.
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export const AboutPage: React.FC = () => {
               2. Artisan Dignity & Consent
             </h3>
             <p className="text-xs text-stone-600 leading-relaxed">
-              Makers decide what personal information and workshop areas to display publicly. We safeguard residential privacy by showcasing public artisan quarters while preserving direct economic rewards for their labor.
+              Consent, control over information, privacy, and fair payment are design goals, not active safeguards in this prototype. The profile details and locations shown here are sample data.
             </p>
           </div>
 
@@ -73,7 +73,7 @@ export const AboutPage: React.FC = () => {
               3. Community Agency & Protocols
             </h3>
             <p className="text-xs text-stone-600 leading-relaxed">
-              We do not assume one person represents an entire community. Sacred and restricted knowledge remains shielded behind community-authorized protocols.
+              A production system would need community-defined protocols and access controls. This frontend has no secure controls and must not be used to submit sacred or restricted information.
             </p>
           </div>
 
@@ -83,7 +83,7 @@ export const AboutPage: React.FC = () => {
               4. Grounded AI Assistance (Gemma)
             </h3>
             <p className="text-xs text-stone-600 leading-relaxed">
-              AI serves strictly as a retrieval-grounded assistant to assist discovery and help structure contributions. AI output is never permitted to independently decide cultural truth or fabricate nonexistent artisans.
+              The current Q&A screen uses canned local fixtures and is not connected to an AI service. A future backend integration must be reviewed against approved sources and must not decide cultural truth on its own.
             </p>
           </div>
         </div>
@@ -99,7 +99,7 @@ export const AboutPage: React.FC = () => {
             Team Àṣà Architecture Split
           </h2>
           <p className="text-xs text-stone-600 mt-1">
-            CultureLens is built through a disciplined parallel architecture to ensure stability and clean integration boundaries:
+            This prototype separates the frontend fixture service from planned backend work. The services listed for Member A are not confirmed as implemented or connected in this checkout:
           </p>
         </div>
 

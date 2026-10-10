@@ -24,17 +24,19 @@ export const CultureDetailPage: React.FC = () => {
   const [record, setRecord] = useState<CulturalRecord | null>(null);
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Correction suggestion modal/state
   const [showCorrectionForm, setShowCorrectionForm] = useState(false);
   const [correctionNote, setCorrectionNote] = useState('');
-  const [correctionEmail, setCorrectionEmail] = useState('');
   const [correctionSubmitted, setCorrectionSubmitted] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setLoadError(false);
 
     if (slug) {
       apiService.getCulturalRecordBySlug(slug).then(async (rec) => {
@@ -50,13 +52,20 @@ export const CultureDetailPage: React.FC = () => {
           if (isMounted) setArtisans(artisanList);
         }
         setLoading(false);
+      }).catch(() => {
+        if (isMounted) {
+          setLoadError(true);
+          setLoading(false);
+        }
       });
+    } else {
+      setLoading(false);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, retryCount]);
 
   const handleShare = () => {
     if (navigator.clipboard) {
@@ -74,7 +83,6 @@ export const CultureDetailPage: React.FC = () => {
       setShowCorrectionForm(false);
       setCorrectionSubmitted(false);
       setCorrectionNote('');
-      setCorrectionEmail('');
     }, 2000);
   };
 
@@ -83,8 +91,17 @@ export const CultureDetailPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-3">
         <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
-          Loading archival record...
+          Loading local sample record...
         </p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div role="alert" className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
+        <h2 className="font-serif text-2xl text-[#34205B]">The sample record could not be loaded</h2>
+        <button onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md">Retry</button>
       </div>
     );
   }
@@ -94,7 +111,7 @@ export const CultureDetailPage: React.FC = () => {
       <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="font-serif text-2xl text-[#34205B]">Cultural Record Not Found</h2>
         <p className="text-sm text-stone-600">
-          The requested cultural archive document does not exist in our documented repository.
+          No sample fixture matches this route.
         </p>
         <button
           onClick={() => navigate('/discover')}
@@ -120,9 +137,9 @@ export const CultureDetailPage: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-4 text-xs font-mono text-stone-500">
-          <span>CATALOG: {record.id.toUpperCase()}</span>
+          <span>SAMPLE FIXTURE: {record.id.toUpperCase()}</span>
           <span>·</span>
-          <span>REVIEWED: {record.lastReviewedDate}</span>
+          <span>FIXTURE DATE: {record.lastReviewedDate}</span>
           <button
             onClick={handleShare}
             className="p-1 hover:text-[#34205B] transition-colors cursor-pointer inline-flex items-center gap-1"
@@ -171,7 +188,7 @@ export const CultureDetailPage: React.FC = () => {
         </div>
         <div className="flex items-center justify-between text-xs text-stone-500 italic px-1">
           <span>Fig. 1 — {record.imageCaption}</span>
-          <span className="font-mono text-[11px] not-italic text-stone-400">ARCHIVE REFERENCE</span>
+          <span className="font-mono text-[11px] not-italic text-stone-400">SAMPLE IMAGE CAPTION</span>
         </div>
       </div>
 
@@ -223,17 +240,17 @@ export const CultureDetailPage: React.FC = () => {
               <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-sm font-semibold text-[#241F2B]">
-                  Archival Review Status: {record.status.replace('_', ' ').toUpperCase()}
+                  Fixture Review Label: {record.status.replace('_', ' ').toUpperCase()}
                 </h4>
                 <p className="text-xs text-stone-600 mt-1 leading-relaxed">
-                  {record.statusReason || 'This record is periodically reconciled against documented field research. Cultural interpretations vary across regional communities.'}
+                  {record.statusReason || 'This label is part of the local sample data and does not indicate that a real review occurred.'}
                 </p>
                 <div className="pt-2">
                   <button
                     onClick={() => setShowCorrectionForm(!showCorrectionForm)}
                     className="text-xs font-medium text-[#34205B] hover:text-[#8A68C7] underline cursor-pointer"
                   >
-                    Suggest a correction or submit regional oral context →
+                    Preview a correction form (not sent) →
                   </button>
                 </div>
               </div>
@@ -243,9 +260,12 @@ export const CultureDetailPage: React.FC = () => {
             {showCorrectionForm && (
               <form onSubmit={handleCorrectionSubmit} className="pt-3 border-t border-stone-200 space-y-3">
                 <div className="text-xs font-medium text-stone-700">
-                  Submit archival note or alternative oral account:
+                  Sample correction note (not stored or sent):
                 </div>
+                <p className="text-xs text-amber-800">Do not enter personal, restricted, community-restricted, or sacred information in this prototype.</p>
+                <label htmlFor="correction-note" className="sr-only">Sample correction note</label>
                 <textarea
+                  id="correction-note"
                   value={correctionNote}
                   onChange={(e) => setCorrectionNote(e.target.value)}
                   placeholder="Detail the variation, community lineage, or reference..."
@@ -254,24 +274,17 @@ export const CultureDetailPage: React.FC = () => {
                   className="w-full p-2.5 text-xs rounded-md border border-[#D7C8B3] bg-white focus:outline-none focus:ring-1 focus:ring-[#34205B]"
                 />
                 <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="email"
-                    value={correctionEmail}
-                    onChange={(e) => setCorrectionEmail(e.target.value)}
-                    placeholder="Your email (for review contact, optional)"
-                    className="flex-1 p-2 text-xs rounded-md border border-[#D7C8B3] bg-white focus:outline-none focus:ring-1 focus:ring-[#34205B]"
-                  />
                   <button
                     type="submit"
                     className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Submit to Review Board</span>
+                    <span>Preview Local Confirmation</span>
                   </button>
                 </div>
                 {correctionSubmitted && (
                   <p className="text-xs text-emerald-700 font-medium pt-1">
-                    Thank you. Your context note has been queued for peer review.
+                    Demo only: nothing was sent, saved, or queued for review.
                   </p>
                 )}
               </form>
@@ -281,7 +294,7 @@ export const CultureDetailPage: React.FC = () => {
           {/* Sources and Archival Provenance */}
           <div className="space-y-4 pt-4 border-t border-[#D7C8B3]">
             <h3 className="font-serif text-xl font-medium text-[#34205B]">
-              Documented Sources & Citations
+              Sample Source Fields · Not Independently Verified
             </h3>
             <div className="space-y-3">
               {record.sources.map((src) => (
@@ -305,7 +318,7 @@ export const CultureDetailPage: React.FC = () => {
           {/* Accession & Cultural Metadata Card */}
           <div className="bg-white rounded-xl border border-[#D7C8B3] p-6 space-y-4 text-xs">
             <h3 className="font-mono text-xs uppercase tracking-wider text-[#8A68C7]">
-              ARCHIVE METADATA
+              SAMPLE METADATA · NOT VERIFIED
             </h3>
             
             <dl className="space-y-3 text-stone-700 divide-y divide-stone-100">
@@ -326,7 +339,7 @@ export const CultureDetailPage: React.FC = () => {
                 <dd><SensitivityLabel level={record.sensitivity} /></dd>
               </div>
               <div className="pt-2 flex justify-between">
-                <dt className="text-stone-500 font-mono">Audit Date</dt>
+                <dt className="text-stone-500 font-mono">Fixture Date</dt>
                 <dd className="font-mono">{record.lastReviewedDate}</dd>
               </div>
             </dl>
@@ -337,25 +350,26 @@ export const CultureDetailPage: React.FC = () => {
             <div className="flex items-center gap-2 text-[#34205B]">
               <Users className="w-4 h-4 text-[#8A68C7]" />
               <h3 className="font-serif text-base font-medium">
-                Living Artisans Practicing This Craft
+                Related Sample Profiles · Not Verified
               </h3>
             </div>
             
             <p className="text-xs text-stone-600 leading-relaxed">
-              CultureLens connects archival knowledge to real master practitioners who keep this tradition alive in Lagos.
+              These profile fixtures illustrate a possible connection between a record and practitioners; no identity, consent, or relationship is verified here.
             </p>
 
             {artisans.length === 0 ? (
               <div className="p-4 bg-white rounded-lg border border-stone-200 text-xs text-stone-500">
-                No active participating artisan is currently linked to this specific record in the demo dataset.
+                No sample profile is linked to this record in the local fixture data.
               </div>
             ) : (
               <div className="space-y-3">
                 {artisans.map((artisan) => (
-                  <div
+                  <a
                     key={artisan.id}
-                    onClick={() => navigate(`/artisans/${artisan.slug}`)}
-                    className="p-3.5 bg-white rounded-lg border border-stone-200 hover:border-[#8A68C7] transition-all cursor-pointer flex items-center gap-3 group"
+                    href={`#/artisans/${artisan.slug}`}
+                    onClick={(event) => { event.preventDefault(); navigate(`/artisans/${artisan.slug}`); }}
+                    className="p-3.5 bg-white rounded-lg border border-stone-200 hover:border-[#8A68C7] transition-all flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#34205B]"
                   >
                     <img
                       src={artisan.avatarUrl}
@@ -374,7 +388,7 @@ export const CultureDetailPage: React.FC = () => {
                       </div>
                     </div>
                     <ArrowRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-1 group-hover:text-[#34205B] transition-all" />
-                  </div>
+                  </a>
                 ))}
               </div>
             )}
@@ -383,10 +397,10 @@ export const CultureDetailPage: React.FC = () => {
           {/* Ask AI Prompt Widget */}
           <div className="bg-white rounded-xl border border-[#D7C8B3] p-5 space-y-3 text-xs">
             <h4 className="font-serif font-medium text-sm text-[#34205B]">
-              Ask Gemma about this craft
+              Explore sample Q&A about this craft
             </h4>
             <p className="text-stone-600 leading-relaxed">
-              Get grounded answers regarding symbolic colors, loom mechanisms, and guild rules.
+              Preview a canned sample response; no AI service or live retrieval is connected.
             </p>
             <button
               onClick={() => navigate('/ask')}

@@ -52,8 +52,16 @@ const AppContent: React.FC = () => {
       return <BookingsPage />;
     }
 
-    // Default fallback
-    return <HomePage />;
+    return (
+      <section className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4" aria-labelledby="not-found-title">
+        <p className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">404 · PAGE NOT FOUND</p>
+        <h1 id="not-found-title" className="font-serif text-3xl text-[#34205B]">This page is not available</h1>
+        <p className="text-sm text-stone-600">The address may be incorrect, or this prototype does not include that route.</p>
+        <button onClick={() => window.location.hash = '#/'} className="px-4 py-2 text-sm font-medium text-white bg-[#34205B] rounded-md">
+          Return to CultureLens
+        </button>
+      </section>
+    );
   };
 
   return (
@@ -62,14 +70,14 @@ const AppContent: React.FC = () => {
       <aside aria-label="Development announcement" className="bg-[#34205B] text-[#D7C8B3] text-xs py-2 px-4 border-b border-[#251642]">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] font-sans">
           <div className="flex items-center gap-2">
-            <span className="font-mono uppercase font-semibold text-white">TEAM ÀṢÀ</span>
+            <span className="font-mono uppercase font-semibold text-white">Ọ̀NÀ ÀṢÀ</span>
             <span>·</span>
             <span>Hack for Humanity Lagos 2026</span>
             <span>·</span>
             <span className="hidden md:inline">Frontend Lead: Member B</span>
           </div>
           <div className="flex items-center gap-3 text-stone-300">
-            <span className="hidden sm:inline">Permissioned Cultural Fixtures Active</span>
+            <span className="text-center">Prototype demo · sample fixtures · no live services</span>
             <span>·</span>
             <a href="#/about" className="text-white hover:text-[#8A68C7] underline cursor-pointer">
               Architecture & Team Split

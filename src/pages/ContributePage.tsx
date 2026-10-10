@@ -33,13 +33,16 @@ export const ContributePage: React.FC = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [confirmedSubmission, setConfirmedSubmission] = useState<ContributionSubmission | null>(null);
 
   // Queue of recent contributions
   const [recentContributions, setRecentContributions] = useState<ContributionSubmission[]>([]);
 
   useEffect(() => {
-    apiService.getRecentContributions().then(setRecentContributions);
+    apiService.getRecentContributions()
+      .then((items) => setRecentContributions(items.filter((item) => item.sensitivityLevel === 'public')))
+      .catch(() => setLoadError(true));
   }, [confirmedSubmission]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,6 +71,10 @@ export const ContributePage: React.FC = () => {
     }
     if (!consentGiven) {
       setErrorMessage('You must confirm consent for cultural documentation and review.');
+      return;
+    }
+    if (sensitivityLevel !== 'public') {
+      setErrorMessage('This prototype cannot safely accept or store restricted, community-restricted, or sacred knowledge. Choose public sample content, or do not submit it here.');
       return;
     }
 
@@ -118,7 +125,7 @@ export const ContributePage: React.FC = () => {
           Contribute Cultural Knowledge
         </h1>
         <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-          Help document, correct, or expand Nigerian heritage records responsibly. In accordance with Team Àṣà’s principles, contributions do not automatically publish to the public archive—each submission is evaluated by authorized cultural reviewers.
+          This prototype saves sample submissions only in this browser. Nothing is sent to a team or reviewer. Do not enter real personal information or restricted, community-restricted, or sacred knowledge.
         </p>
       </div>
 
@@ -129,17 +136,17 @@ export const ContributePage: React.FC = () => {
             <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0 mt-0.5" />
             <div className="space-y-1">
               <h3 className="font-serif text-lg font-medium text-emerald-950">
-                Contribution Received into Review Queue
+                Demo Contribution Saved in This Browser
               </h3>
               <p className="text-xs text-emerald-800 leading-relaxed">
-                Your submission has been assigned a tracking reference and queued for evaluation. We will notify you at <strong className="font-medium">{confirmedSubmission.contributorEmail}</strong> once our cultural reviewers review the source citations.
+                This is a local demo receipt only. No reviewer has received this submission, no review is scheduled, and no email will be sent. The sample data remains in this browser until its local storage is cleared.
               </p>
             </div>
           </div>
 
           <div className="p-3 bg-white rounded-lg border border-emerald-200 text-xs font-mono flex flex-wrap items-center justify-between gap-2">
             <span>REFERENCE: {confirmedSubmission.reference}</span>
-            <span>STATUS: UNDER_REVIEW</span>
+            <span>STATUS: LOCAL DEMO ONLY</span>
             <span>DATE: {new Date(confirmedSubmission.submittedAt).toLocaleDateString()}</span>
           </div>
 
@@ -269,11 +276,11 @@ export const ContributePage: React.FC = () => {
             required
             value={sources}
             onChange={(e) => setSources(e.target.value)}
-            placeholder="Name the elder, guild master, published monograph, or archival recording that substantiates this entry..."
+            placeholder="Enter sample citation text for the interface demo; this form does not validate sources..."
             className="w-full p-3 rounded-lg border border-[#D7C8B3] text-stone-900 text-xs focus:ring-2 focus:ring-[#34205B]"
           />
           <p className="text-[11px] text-stone-500 mt-1">
-            CultureLens enforces strict provenance. Submissions lacking verifiable sources cannot be approved for public archiving.
+            A source field is required to preview the form. This demo does not check citations, approve content, or publish to an archive.
           </p>
         </div>
 
@@ -282,11 +289,12 @@ export const ContributePage: React.FC = () => {
           <label className="block text-xs font-mono uppercase tracking-wider text-stone-700">
             5. SENSITIVITY & ACCESS LEVEL *
           </label>
+          <p className="text-xs text-amber-800">This prototype blocks saving anything except public-sensitivity demo content. It has no secure access controls.</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             {[
-              { level: 'public', label: 'Public Heritage', desc: 'Permitted for open public discovery' },
-              { level: 'community_restricted', label: 'Community Restricted', desc: 'Restricted to verified cultural members' },
-              { level: 'sacred', label: 'Sacred / Closed Protocol', desc: 'Protected under sacred ancestral boundaries' }
+              { level: 'public', label: 'Public Sample', desc: 'Public-sensitivity demo text only; not verified or published' },
+              { level: 'community_restricted', label: 'Community Restricted', desc: 'Would require permission and access controls; not accepted here' },
+              { level: 'sacred', label: 'Sacred / Closed Protocol', desc: 'Not accepted in this prototype; do not enter' }
             ].map((s) => (
               <label
                 key={s.level}
@@ -320,9 +328,9 @@ export const ContributePage: React.FC = () => {
 
           <div className="flex flex-wrap gap-4">
             {[
-              { id: 'public', label: 'Public Attribution (Name listed)' },
-              { id: 'pseudonymous', label: 'Pseudonymous Initials' },
-              { id: 'anonymous', label: 'Completely Anonymous' }
+              { id: 'public', label: 'Show Sample Name in This Browser' },
+              { id: 'pseudonymous', label: 'Use Sample Initials' },
+              { id: 'anonymous', label: 'Hide Attribution in This Browser' }
             ].map((opt) => (
               <label key={opt.id} className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -345,24 +353,24 @@ export const ContributePage: React.FC = () => {
                   type="text"
                   value={contributorName}
                   onChange={(e) => setContributorName(e.target.value)}
-                  placeholder="e.g. Dr. Ronke Lawal"
+                  placeholder="Sample Contributor"
                   className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
                 />
               </div>
             )}
 
             <div className={attributionPreference === 'anonymous' ? 'sm:col-span-2' : ''}>
-              <label className="block text-stone-700 mb-1">Reviewer Contact Email *</label>
+            <label className="block text-stone-700 mb-1">Demo Contact Email *</label>
               <input
                 type="email"
                 required
                 value={contributorEmail}
                 onChange={(e) => setContributorEmail(e.target.value)}
-                placeholder="e.g. contributor@example.org"
+                placeholder="demo@example.invalid"
                 className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
               />
               <span className="text-[10px] text-stone-500">
-                Your email is never shared publicly and is strictly used by reviewers to clarify historical facts.
+                Use a placeholder address only. This prototype stores it in this browser and does not contact reviewers.
               </span>
             </div>
           </div>
@@ -379,7 +387,7 @@ export const ContributePage: React.FC = () => {
               className="mt-0.5 text-[#34205B] focus:ring-[#34205B] rounded"
             />
             <span className="leading-relaxed">
-              I affirm that I have permission from community elders or documented sources to share this knowledge, and I consent to its non-commercial preservation and peer review on CultureLens.
+              I confirm that the public sample content I enter is suitable for this browser-only demonstration. I understand it is not sent for preservation or peer review.
             </span>
           </label>
         </div>
@@ -387,7 +395,7 @@ export const ContributePage: React.FC = () => {
         {/* Submission Action */}
         <div className="flex items-center justify-between pt-2">
           <span className="text-xs font-mono text-stone-500">
-            CONFIDENTIAL REVIEW WORKFLOW
+            LOCAL BROWSER DEMO · NOT SENT
           </span>
 
           <button
@@ -398,12 +406,12 @@ export const ContributePage: React.FC = () => {
             {submitting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Submitting for Review...</span>
+                <span>Saving Demo Locally...</span>
               </>
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span>Submit for Peer Review</span>
+                <span>Save Demo Locally</span>
               </>
             )}
           </button>
@@ -411,29 +419,31 @@ export const ContributePage: React.FC = () => {
 
       </form>
 
-      {/* Review Dashboard / Queue Transparency Strip */}
+      {/* Local Browser Demo Register */}
       <div className="bg-white rounded-2xl border border-[#D7C8B3] p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              PUBLIC TRANSPARENCY REGISTER
+              THIS BROWSER ONLY · PUBLIC-SENSITIVITY DEMO ITEMS
             </span>
             <h3 className="font-serif text-xl font-medium text-[#34205B]">
-              Recent Submissions in Review Queue
+              Local Demo Submissions
             </h3>
           </div>
           <span className="font-mono text-xs text-stone-500">
-            {recentContributions.length} Items Pending Review
+            {recentContributions.length} local items
           </span>
         </div>
 
         <div className="space-y-3">
+          {loadError && <p role="alert" className="text-sm text-rose-800">Local demo entries could not be loaded.</p>}
+          {!loadError && recentContributions.length === 0 && <p className="text-sm text-stone-500">No public-sensitivity demo submissions are saved in this browser.</p>}
           {recentContributions.map((c) => (
             <div key={c.id} className="p-4 bg-[#FAF7F2] rounded-xl border border-stone-200 text-xs space-y-1">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium text-stone-900">{c.title}</span>
                 <span className="font-mono text-[11px] text-amber-800 bg-amber-100/60 px-2 py-0.5 rounded">
-                  {c.status.replace('_', ' ').toUpperCase()}
+                  LOCAL DEMO · NOT REVIEWED
                 </span>
               </div>
               <p className="text-stone-600 line-clamp-1">{c.description}</p>

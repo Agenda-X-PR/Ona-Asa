@@ -12,43 +12,22 @@ import {
   EXPERIENCES, 
   MOCK_QNA_RESPONSES 
 } from '../data/mockData';
+import { matchesSearchQuery } from '../utils/search';
 
 const STORAGE_KEY_BOOKINGS = 'culturelens_demo_bookings_v1';
 const STORAGE_KEY_CONTRIBUTIONS = 'culturelens_demo_contributions_v1';
 
-// Seed initial bookings into localStorage if empty
 function getStoredBookings(): BookingRecord[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_BOOKINGS);
-    if (!raw) {
-      const initialBookings: BookingRecord[] = [
-        {
-          id: 'bk_demo_01',
-          reference: 'CL-BK-89210',
-          experienceId: 'exp_asooke_workshop',
-          experienceTitle: 'Hands-on Aso-Òkè Loom Workshop: Weave Your First Strip',
-          sessionId: 'sess_aso_01',
-          sessionDate: '2026-10-18',
-          sessionTime: '10:00 AM – 1:30 PM',
-          artisanId: 'art_babatunde_adeyemi',
-          artisanName: 'Babatunde Adeyemi',
-          participantCount: 2,
-          guestName: 'Tunde Bakare',
-          guestEmail: 'tunde.bakare@example.ng',
-          guestPhone: '+234 802 345 6789',
-          totalAmountNaira: 70000,
-          currency: 'NGN',
-          status: 'pending_request',
-          paymentStatus: 'pending',
-          paymentProvider: 'ALATPay (Demo Boundary)',
-          createdAt: '2026-10-09T14:22:00Z',
-          specialRequests: 'Would love to focus on indigo Etu stripe pattern.'
-        }
-      ];
-      localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(initialBookings));
-      return initialBookings;
+    if (!raw) return [];
+    const stored = JSON.parse(raw);
+    if (!Array.isArray(stored)) return [];
+    const bookings = stored.filter((booking) => booking?.id !== 'bk_demo_01');
+    if (bookings.length !== stored.length) {
+      localStorage.setItem(STORAGE_KEY_BOOKINGS, JSON.stringify(bookings));
     }
-    return JSON.parse(raw);
+    return bookings;
   } catch {
     return [];
   }
@@ -57,32 +36,14 @@ function getStoredBookings(): BookingRecord[] {
 function getStoredContributions(): ContributionSubmission[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CONTRIBUTIONS);
-    if (!raw) {
-      const initialSubmissions: ContributionSubmission[] = [
-        {
-          id: 'contrib_demo_01',
-          reference: 'CL-CT-40192',
-          type: 'oral_history',
-          title: 'Iseyin Cotton Spindle Lore & Weaver Incantations',
-          description: 'Documenting the songs sung by women spinners when winding cotton bobbins for horizontal loom weavers.',
-          community: 'Iseyin Weaving Guild',
-          region: 'Oyo State',
-          language: 'Yorùbá',
-          sources: 'Recorded from Mama Ayinke Adekoya, elder spinner in Iseyin.',
-          attributionPreference: 'public',
-          contributorName: 'Folake Adeleke',
-          contributorEmail: 'f.adeleke@example.org',
-          consentGiven: true,
-          sensitivityLevel: 'public',
-          status: 'under_review',
-          submittedAt: '2026-10-08T09:15:00Z',
-          reviewNotes: 'Assigned to Cultural Review Board for lineage verification.'
-        }
-      ];
-      localStorage.setItem(STORAGE_KEY_CONTRIBUTIONS, JSON.stringify(initialSubmissions));
-      return initialSubmissions;
+    if (!raw) return [];
+    const stored = JSON.parse(raw);
+    if (!Array.isArray(stored)) return [];
+    const submissions = stored.filter((submission) => submission?.id !== 'contrib_demo_01');
+    if (submissions.length !== stored.length) {
+      localStorage.setItem(STORAGE_KEY_CONTRIBUTIONS, JSON.stringify(submissions));
     }
-    return JSON.parse(raw);
+    return submissions;
   } catch {
     return [];
   }
@@ -93,12 +54,19 @@ export const apiService = {
   async getCulturalRecords(query = '', category = '', status = ''): Promise<CulturalRecord[]> {
     await new Promise((r) => setTimeout(r, 80));
     return CULTURAL_RECORDS.filter((rec) => {
-      const matchQuery = !query.trim() || 
-        rec.title.toLowerCase().includes(query.toLowerCase()) ||
-        (rec.nativeName && rec.nativeName.toLowerCase().includes(query.toLowerCase())) ||
-        rec.shortDescription.toLowerCase().includes(query.toLowerCase()) ||
-        rec.region.toLowerCase().includes(query.toLowerCase()) ||
-        rec.community.toLowerCase().includes(query.toLowerCase());
+      const matchQuery = matchesSearchQuery(query, [
+        rec.title,
+        rec.nativeName ?? '',
+        rec.language ?? '',
+        rec.category,
+        rec.region,
+        rec.community,
+        rec.shortDescription,
+        ...rec.fullNarrative,
+        rec.historicalContext,
+        rec.materialAndTechnique,
+        ...rec.sources.map((source) => source.citation),
+      ]);
       
       const matchCategory = !category || rec.category === category;
       const matchStatus = !status || rec.status === status;
@@ -200,7 +168,7 @@ export const apiService = {
     return {
       success: true,
       booking: newBooking,
-      message: 'Booking request recorded successfully. Pending server verification & ALATPay settlement.'
+      message: 'Demo booking request saved only in this browser. No reservation or payment was made.'
     };
   },
 
@@ -218,6 +186,9 @@ export const apiService = {
     message: string;
   }> {
     await new Promise((r) => setTimeout(r, 250));
+    if (payload.sensitivityLevel !== 'public') {
+      throw new Error('The local demo cannot safely store restricted or sacred knowledge.');
+    }
     const ref = 'CL-CT-' + Math.floor(10000 + Math.random() * 90000);
     const newSubmission: ContributionSubmission = {
       ...payload,
@@ -234,7 +205,7 @@ export const apiService = {
     return {
       success: true,
       submission: newSubmission,
-      message: 'Cultural knowledge contribution submitted for review.'
+      message: 'Demo contribution saved only in this browser. It was not sent for review.'
     };
   },
 
@@ -243,7 +214,7 @@ export const apiService = {
     return getStoredContributions();
   },
 
-  // Grounded Cultural Q&A (Gemma boundary)
+  // Local keyword-matched Q&A fixtures; no Gemma or retrieval service is called.
   async askCulturalQuestion(query: string): Promise<QnAResponse> {
     await new Promise((r) => setTimeout(r, 450));
     const clean = query.toLowerCase().trim();
@@ -266,10 +237,10 @@ export const apiService = {
     return {
       id: 'qna_unsupported_' + Date.now(),
       question: query,
-      answer: 'Our current documented records do not contain verified archival evidence specifically addressing this inquiry. In accordance with Team Àṣà’s provenance policy, CultureLens refrains from fabricating cultural claims or guessing undocumented practices.',
+      answer: 'The local sample dataset has no matching fixture for this inquiry. This prototype cannot establish whether evidence exists elsewhere, and this response is not a researched or model-generated answer.',
       groundedRecordSlugs: [],
       associatedArtisanIds: [],
-      uncertaintyOrDisputeNotes: 'You can contribute oral history, community documentation, or archival references regarding this topic on our Contribute page to assist peer reviewers.',
+      uncertaintyOrDisputeNotes: 'The Contribute page is a local-only demo form; entries are not sent to reviewers.',
       confidence: 'insufficient_evidence'
     };
   }

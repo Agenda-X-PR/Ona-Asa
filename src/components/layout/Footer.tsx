@@ -14,9 +14,9 @@ export const Footer: React.FC = () => {
             <div className="flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-[#8A68C7] shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-[#F4EFE5]">Source Transparency</h4>
+                <h4 className="font-medium text-[#F4EFE5]">Sample Content</h4>
                 <p className="text-xs text-[#D7C8B3]/75 mt-1 leading-relaxed">
-                  Every cultural story records its provenance, archive citation, or oral testimony. Disputed knowledge is explicitly acknowledged.
+                  Records, source fields, and status labels are illustrative fixtures; citations and cultural claims have not been independently verified.
                 </p>
               </div>
             </div>
@@ -24,9 +24,9 @@ export const Footer: React.FC = () => {
             <div className="flex items-start gap-3">
               <HeartHandshake className="w-5 h-5 text-[#8A68C7] shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-[#F4EFE5]">Artisan Agency</h4>
+                <h4 className="font-medium text-[#F4EFE5]">Consent & Agency</h4>
                 <p className="text-xs text-[#D7C8B3]/75 mt-1 leading-relaxed">
-                  Participating makers maintain ownership over their stories, public locations, and experience pricing without intermediary exploitation.
+                  Consent and maker agency are design goals. These sample profiles do not establish real consent, ownership, availability, or payment arrangements.
                 </p>
               </div>
             </div>
@@ -34,9 +34,9 @@ export const Footer: React.FC = () => {
             <div className="flex items-start gap-3">
               <Compass className="w-5 h-5 text-[#8A68C7] shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-[#F4EFE5]">Living Heritage</h4>
+                <h4 className="font-medium text-[#F4EFE5]">Experience UI</h4>
                 <p className="text-xs text-[#D7C8B3]/75 mt-1 leading-relaxed">
-                  Bridging traditional knowledge with real participatory workshops across Lagos and Nigerian cultural corridors.
+                  Workshop listings and booking screens are illustrative only; no sessions or booking service are active.
                 </p>
               </div>
             </div>
@@ -59,17 +59,17 @@ export const Footer: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-[#D7C8B3] leading-relaxed">
-              Discover the culture. Learn its story. Meet its makers. A cultural technology initiative created for Hack for Humanity Lagos 2026.
+              A prototype for browsing sample cultural records, profile cards, and local-only demo flows, created for Hack for Humanity Lagos 2026.
             </p>
             <div className="pt-2 text-[11px] font-mono text-[#D7C8B3]/60">
-              BUILD: TEAM ÀṢÀ · FRONTEND FOUNDATION
+              BUILD: Ọ̀NÀ ÀṢÀ · FRONTEND PROTOTYPE
             </div>
           </div>
 
           {/* Column 2: Cultural Knowledge */}
           <div className="space-y-3">
             <h5 className="text-xs font-mono uppercase tracking-wider text-[#8A68C7]">
-              Cultural Archives
+              Sample Records
             </h5>
             <ul className="space-y-2 text-sm text-[#D7C8B3]">
               <li>
@@ -109,7 +109,7 @@ export const Footer: React.FC = () => {
                   onClick={() => navigate('/discover')} 
                   className="hover:text-white transition-colors cursor-pointer text-left text-xs text-[#8A68C7]"
                 >
-                  View all archive topics →
+                  Browse all sample records →
                 </button>
               </li>
             </ul>
@@ -158,7 +158,7 @@ export const Footer: React.FC = () => {
                   onClick={() => navigate('/bookings')} 
                   className="hover:text-white transition-colors cursor-pointer text-left text-xs text-[#8A68C7]"
                 >
-                  Verify Booking Status →
+                  Look up a local demo request →
                 </button>
               </li>
             </ul>
@@ -167,10 +167,10 @@ export const Footer: React.FC = () => {
           {/* Column 4: Governance & Integrity */}
           <div className="space-y-3">
             <h5 className="text-xs font-mono uppercase tracking-wider text-[#8A68C7]">
-              Cultural Governance
+              Prototype Limits
             </h5>
             <p className="text-xs text-[#D7C8B3]/80 leading-relaxed">
-              We never fabricate cultural claims, invent artificial sources, or assume ancestry. Restricted and sacred information remains protected by community protocol.
+              This checkout does not verify cultural claims, sources, identities, consent, or community permissions. Do not submit real personal, restricted, or sacred information: the local demo has no secure review or access controls.
             </p>
             <div className="pt-2">
               <button
@@ -188,14 +188,14 @@ export const Footer: React.FC = () => {
         {/* Bottom Baseline Bar */}
         <div className="mt-12 pt-6 border-t border-[#34205B]/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#D7C8B3]/60">
           <div>
-            © 2026 CultureLens · Team Àṣà. All rights reserved. Built for Hack for Humanity Lagos.
+            © 2026 CultureLens · Ọ̀nà Àṣà. Prototype for Hack for Humanity Lagos.
           </div>
           <div className="flex items-center gap-4 font-mono text-[11px]">
             <span>LAGOS, NIGERIA</span>
             <span>·</span>
-            <span>GEMMA GROUNDED MODEL READY</span>
+            <span>LOCAL SAMPLE Q&A · NO AI SERVICE</span>
             <span>·</span>
-            <span>ALATPAY SETTLEMENT BOUNDARY</span>
+            <span>DEMO BOOKING · NO PAYMENT</span>
           </div>
         </div>
       </div>

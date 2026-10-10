@@ -9,6 +9,8 @@ export const ArtisansPage: React.FC = () => {
   const { navigate } = useRouter();
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [craftFilter, setCraftFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +37,7 @@ export const ArtisansPage: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setLoadError(false);
 
     const craftParam = craftFilter === 'All Crafts' ? '' : craftFilter;
     const locParam = locationFilter === 'All Locations' ? '' : locationFilter;
@@ -53,12 +56,17 @@ export const ArtisansPage: React.FC = () => {
       });
       setArtisans(filtered);
       setLoading(false);
+    }).catch(() => {
+      if (isMounted) {
+        setLoadError(true);
+        setLoading(false);
+      }
     });
 
     return () => {
       isMounted = false;
     };
-  }, [craftFilter, locationFilter, searchQuery]);
+  }, [craftFilter, locationFilter, searchQuery, retryCount]);
 
   const handleReset = () => {
     setCraftFilter('');
@@ -78,7 +86,7 @@ export const ArtisansPage: React.FC = () => {
           Artisan Directory
         </h1>
         <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
-          Connect with traditional makers, weavers, ceramicists, and metalworkers in Lagos and surrounding cultural corridors. Every listed artisan has chosen their public profile fields, workshop locations, and availability.
+          Preview illustrative profile cards for traditional craft disciplines. Names, biographies, consent, workshop locations, and availability are sample data and are not verified.
         </p>
       </div>
 
@@ -140,7 +148,7 @@ export const ArtisansPage: React.FC = () => {
         {/* Clean unboxed metadata strip */}
         <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between text-xs text-stone-500 font-sans">
           <div className="flex items-center gap-2">
-            <span>Showing {artisans.length} active practitioners</span>
+            <span>Showing {artisans.length} sample profiles</span>
             {craftFilter && (
               <>
                 <span aria-hidden="true">·</span>
@@ -155,7 +163,7 @@ export const ArtisansPage: React.FC = () => {
             )}
           </div>
           <span className="font-mono text-[11px] text-[#8A68C7]">
-            VERIFIED GUILD LISTINGS
+            ILLUSTRATIVE FIXTURES · NOT VERIFIED
           </span>
         </div>
       </div>
@@ -165,14 +173,19 @@ export const ArtisansPage: React.FC = () => {
         <div className="py-20 text-center space-y-3">
           <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
-            Querying artisan registry...
+            Loading local sample profiles...
           </p>
+        </div>
+      ) : loadError ? (
+        <div role="alert" className="bg-rose-50 rounded-xl border border-rose-200 p-8 text-center max-w-xl mx-auto space-y-4">
+          <p className="text-sm text-rose-900">The local sample profiles could not be loaded.</p>
+          <button onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md">Retry</button>
         </div>
       ) : artisans.length === 0 ? (
         <div className="bg-white rounded-xl border border-[#D7C8B3] p-12 text-center max-w-xl mx-auto space-y-4">
           <p className="font-serif text-lg text-[#34205B]">No artisans matched your current filters.</p>
           <p className="text-xs text-stone-600">
-            CultureLens only presents genuine registered practitioners and never generates artificial filler profiles.
+            These are illustrative interface fixtures, not verified people or active practitioners.
           </p>
           <button
             onClick={handleReset}
@@ -184,11 +197,8 @@ export const ArtisansPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {artisans.map((artisan) => (
-            <article
-              key={artisan.id}
-              onClick={() => navigate(`/artisans/${artisan.slug}`)}
-              className="group cursor-pointer bg-white rounded-xl border border-[#D7C8B3]/80 overflow-hidden hover:shadow-md hover:border-[#8A68C7] transition-all flex flex-col justify-between"
-            >
+            <article key={artisan.id} className="group bg-white rounded-xl border border-[#D7C8B3]/80 overflow-hidden hover:shadow-md hover:border-[#8A68C7] transition-all flex flex-col justify-between">
+              <a href={`#/artisans/${artisan.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/artisans/${artisan.slug}`); }} aria-label={`Open illustrative profile: ${artisan.displayName}`} className="flex h-full flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#34205B]">
               <div>
                 {/* Header Profile Image & Native Title */}
                 <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
@@ -239,6 +249,7 @@ export const ArtisansPage: React.FC = () => {
                   View Profile <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
+              </a>
             </article>
           ))}
         </div>
@@ -248,7 +259,7 @@ export const ArtisansPage: React.FC = () => {
       <div className="p-4 bg-white/60 rounded-xl border border-[#D7C8B3] text-xs text-stone-600 flex items-start gap-3">
         <ShieldCheck className="w-4 h-4 text-[#8A68C7] shrink-0 mt-0.5" />
         <p className="leading-relaxed">
-          <strong className="text-stone-800">Demonstration Integrity:</strong> These profiles represent real traditional disciplines and illustrative master artisans prepared for Hack for Humanity Lagos. In production, every artisan profile undergoes verified guild authentication and explicit consent checks before publication.
+          <strong className="text-stone-800">Prototype notice:</strong> Names, biographies, quotes, images, verification labels, and contact/availability details are sample data and are not independently verified. Do not treat them as real identities, consent, endorsements, or booking availability.
         </p>
       </div>
 

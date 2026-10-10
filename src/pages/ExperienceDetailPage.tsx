@@ -23,6 +23,8 @@ export const ExperienceDetailPage: React.FC = () => {
   const [experience, setExperience] = useState<CulturalExperience | null>(null);
   const [artisan, setArtisan] = useState<ArtisanProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Booking Form State
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
@@ -39,6 +41,7 @@ export const ExperienceDetailPage: React.FC = () => {
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setLoadError(false);
 
     if (slug) {
       apiService.getExperienceBySlug(slug).then(async (exp) => {
@@ -54,13 +57,20 @@ export const ExperienceDetailPage: React.FC = () => {
           if (firstAvail) setSelectedSessionId(firstAvail.id);
         }
         setLoading(false);
+      }).catch(() => {
+        if (isMounted) {
+          setLoadError(true);
+          setLoading(false);
+        }
       });
+    } else {
+      setLoading(false);
     }
 
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [slug, retryCount]);
 
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,8 +125,17 @@ export const ExperienceDetailPage: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-3">
         <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
         <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
-          Loading workshop itinerary...
+          Loading local sample workshop...
         </p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div role="alert" className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
+        <h2 className="font-serif text-2xl text-[#34205B]">The sample workshop could not be loaded</h2>
+        <button onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md">Retry</button>
       </div>
     );
   }
@@ -125,7 +144,7 @@ export const ExperienceDetailPage: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
         <h2 className="font-serif text-2xl text-[#34205B]">Experience Not Found</h2>
-        <p className="text-sm text-stone-600">The requested workshop does not exist or has concluded.</p>
+        <p className="text-sm text-stone-600">No sample workshop fixture matches this route.</p>
         <button
           onClick={() => navigate('/experiences')}
           className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md"
@@ -180,7 +199,7 @@ export const ExperienceDetailPage: React.FC = () => {
               referrerPolicy="no-referrer"
             />
             <div className="text-xs">
-              <span className="text-stone-500 block">Led by Master Artisan</span>
+              <span className="text-stone-500 block">Associated sample profile · not verified</span>
               <button
                 onClick={() => navigate(`/artisans/${artisan.slug}`)}
                 className="font-medium text-[#34205B] hover:text-[#8A68C7] transition-colors underline cursor-pointer"
@@ -211,7 +230,7 @@ export const ExperienceDetailPage: React.FC = () => {
           {/* Description & Narrative */}
           <div className="bg-white rounded-xl border border-[#D7C8B3] p-6 sm:p-8 space-y-4">
             <h2 className="font-serif text-2xl font-medium text-[#34205B]">
-              Workshop Overview
+              Sample Workshop Description
             </h2>
             <p className="text-sm sm:text-base text-stone-700 leading-relaxed font-sans">
               {experience.description}
@@ -276,13 +295,13 @@ export const ExperienceDetailPage: React.FC = () => {
             
             <div className="border-b border-[#D7C8B3]/60 pb-4">
               <span className="text-[11px] font-mono uppercase tracking-wider text-stone-500">
-                RESERVE YOUR WORKSHOP SEAT
+                LOCAL DEMO REQUEST · NOT A RESERVATION
               </span>
               <div className="flex items-baseline justify-between mt-1">
                 <span className="font-mono text-2xl sm:text-3xl font-bold text-[#34205B] tabular-nums">
                   ₦{experience.priceNaira.toLocaleString()}
                 </span>
-                <span className="text-xs text-stone-500">per participant</span>
+                <span className="text-xs text-stone-500">sample price · not an offer</span>
               </div>
             </div>
 
@@ -292,7 +311,7 @@ export const ExperienceDetailPage: React.FC = () => {
                 <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2 text-center">
                   <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
                   <h3 className="font-serif text-lg font-medium text-emerald-900">
-                    Booking Request Recorded
+                    Demo Request Saved Locally
                   </h3>
                   <div className="font-mono text-sm font-semibold text-emerald-800 bg-white py-1 px-3 rounded-md inline-block border border-emerald-200">
                     REF: {completedBooking.reference}
@@ -313,8 +332,8 @@ export const ExperienceDetailPage: React.FC = () => {
                     <span className="font-medium">{completedBooking.participantCount} Guest(s)</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-stone-200">
-                    <span className="text-stone-500">Guest Name</span>
-                    <span className="font-medium">{completedBooking.guestName}</span>
+                    <span className="text-stone-500">Contact details</span>
+                    <span className="font-medium">Hidden in this demo</span>
                   </div>
                   <div className="flex justify-between py-1 font-semibold text-stone-900 pt-2">
                     <span>Total Amount</span>
@@ -326,7 +345,7 @@ export const ExperienceDetailPage: React.FC = () => {
                 <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900 leading-relaxed space-y-1">
                   <strong className="block font-medium">Demonstration State Notice:</strong>
                   <span>
-                    This booking request is safely saved in local state. In production, this transitions to Member A’s backend ALATPay transaction verification flow before issuing the final confirmed ticket.
+                    This demo request is saved only in this browser. Nothing is sent to an artisan or booking service; no seat is reserved, ticket issued, or payment taken. Use placeholder contact details only.
                   </span>
                 </div>
 
@@ -335,20 +354,21 @@ export const ExperienceDetailPage: React.FC = () => {
                     onClick={() => navigate('/bookings')}
                     className="w-full py-2.5 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    <span>Verify in Booking Lookup</span>
+                    <span>Look up local demo request</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setCompletedBooking(null)}
                     className="w-full py-2 text-xs font-medium text-stone-600 hover:bg-stone-100 rounded-md transition-colors"
                   >
-                    Book another date
+                    Preview another demo request
                   </button>
                 </div>
               </div>
             ) : (
-              /* Interactive Booking Form */
+              /* Local-Only Booking Demo Form */
               <form onSubmit={handleBookingSubmit} className="space-y-4 text-xs">
+                <p className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900">Demo form only. Requests are stored in this browser; no artisan, booking service, or payment provider is contacted. Use placeholder values only.</p>
                 
                 {formError && (
                   <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-800 flex items-start gap-2">
@@ -399,7 +419,7 @@ export const ExperienceDetailPage: React.FC = () => {
                             {isFull ? (
                               <span className="text-rose-700 font-medium">Session Full</span>
                             ) : (
-                              <span>{seatsLeft} seat(s) open</span>
+                              <span>{seatsLeft} sample seat(s)</span>
                             )}
                           </div>
                         </label>
@@ -410,10 +430,11 @@ export const ExperienceDetailPage: React.FC = () => {
 
                 {/* Participant Count */}
                 <div>
-                  <label className="block font-medium text-stone-800 mb-1">
+                  <label htmlFor="participant-count" className="block font-medium text-stone-800 mb-1">
                     Number of Participants
                   </label>
                   <select
+                    id="participant-count"
                     value={participantCount}
                     onChange={(e) => setParticipantCount(Number(e.target.value))}
                     disabled={!selectedSession || remainingSeats === 0}
@@ -430,48 +451,52 @@ export const ExperienceDetailPage: React.FC = () => {
                 {/* Guest Contact Details */}
                 <div className="space-y-3 pt-2 border-t border-stone-200">
                   <div>
-                    <label className="block font-medium text-stone-700 mb-1">Your Full Name *</label>
+                    <label htmlFor="guest-name" className="block font-medium text-stone-700 mb-1">Sample Name *</label>
                     <input
+                      id="guest-name"
                       type="text"
                       required
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="e.g. Babajide Sowore"
+                      placeholder="Sample Guest"
                       className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium text-stone-700 mb-1">Email Address *</label>
+                    <label htmlFor="guest-email" className="block font-medium text-stone-700 mb-1">Demo Email *</label>
                     <input
+                      id="guest-email"
                       type="email"
                       required
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
-                      placeholder="e.g. jide.sowore@example.ng"
+                      placeholder="demo@example.invalid"
                       className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium text-stone-700 mb-1">Phone Number *</label>
+                    <label htmlFor="guest-phone" className="block font-medium text-stone-700 mb-1">Demo Phone *</label>
                     <input
+                      id="guest-phone"
                       type="tel"
                       required
                       value={guestPhone}
                       onChange={(e) => setGuestPhone(e.target.value)}
-                      placeholder="e.g. +234 803 123 4567"
+                      placeholder="+234 000 000 0000"
                       className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-medium text-stone-700 mb-1">Special Requests or Accessibility</label>
+                    <label htmlFor="special-requests" className="block font-medium text-stone-700 mb-1">Demo Note (no sensitive details)</label>
                     <textarea
+                      id="special-requests"
                       rows={2}
                       value={specialRequests}
                       onChange={(e) => setSpecialRequests(e.target.value)}
-                      placeholder="Any mobility requirements, left-hand loom adjustments, or queries..."
+                      placeholder="Sample note only; do not enter real or sensitive information."
                       className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
                     />
                   </div>
@@ -480,7 +505,7 @@ export const ExperienceDetailPage: React.FC = () => {
                 {/* Real-time Order Summary */}
                 <div className="p-3 bg-[#FAF7F2] rounded-lg border border-stone-200 flex justify-between items-center text-xs">
                   <div>
-                    <span className="text-stone-500 block">Total Due</span>
+                    <span className="text-stone-500 block">Sample total · not payable</span>
                     <span className="text-[11px] text-stone-500">
                       {participantCount} × ₦{experience.priceNaira.toLocaleString()}
                     </span>
@@ -504,13 +529,13 @@ export const ExperienceDetailPage: React.FC = () => {
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" />
-                      <span>Request Workshop Reservation</span>
+                      <span>Save Demo Request Locally</span>
                     </>
                   )}
                 </button>
 
                 <p className="text-[11px] text-stone-500 text-center leading-relaxed">
-                  Demonstrative booking flow. No charges are incurred during this frontend evaluation.
+                  Browser-only demo. Do not use real personal details. No booking is confirmed and no charge can be made.
                 </p>
 
               </form>

@@ -9,6 +9,8 @@ export const DiscoverPage: React.FC = () => {
   const { navigate, searchQuery, setSearchQuery } = useRouter();
   const [records, setRecords] = useState<CulturalRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
 
@@ -26,11 +28,13 @@ export const DiscoverPage: React.FC = () => {
     { label: 'Archivally Documented', value: 'documented' },
     { label: 'Community Reviewed', value: 'community_reviewed' },
     { label: 'Under Peer Review', value: 'under_review' },
+    { label: 'Contested', value: 'disputed' },
   ];
 
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
+    setLoadError(false);
 
     const categoryParam = selectedCategory === 'All Categories' ? '' : selectedCategory;
     apiService.getCulturalRecords(searchQuery, categoryParam, selectedStatus)
@@ -41,13 +45,16 @@ export const DiscoverPage: React.FC = () => {
         }
       })
       .catch(() => {
-        if (isMounted) setLoading(false);
+        if (isMounted) {
+          setLoadError(true);
+          setLoading(false);
+        }
       });
 
     return () => {
       isMounted = false;
     };
-  }, [searchQuery, selectedCategory, selectedStatus]);
+  }, [searchQuery, selectedCategory, selectedStatus, retryCount]);
 
   const handleReset = () => {
     setSearchQuery('');
@@ -61,13 +68,13 @@ export const DiscoverPage: React.FC = () => {
       {/* Header & Curatorial Context */}
       <div className="max-w-3xl space-y-3">
         <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-          CULTURAL KNOWLEDGE ARCHIVE
+          CULTURAL RECORD PROTOTYPE
         </span>
         <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#34205B] font-medium tracking-tight">
           Cultural Discovery
         </h1>
         <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
-          Search documented Nigerian traditions, historical craft disciplines, and community narratives. Every entry includes verified citations and explicitly flags contested or incomplete accounts.
+          Search the illustrative record fixtures in this prototype. Their citations and cultural claims have not been independently verified.
         </p>
       </div>
 
@@ -79,6 +86,7 @@ export const DiscoverPage: React.FC = () => {
           <div className="relative flex-1 w-full">
             <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
+              id="culture-search"
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -87,9 +95,11 @@ export const DiscoverPage: React.FC = () => {
             />
           </div>
 
-          {/* Category Filter */}
+              {/* Category Filter */}
+              <label htmlFor="culture-category" className="sr-only">Filter by category</label>
           <div className="w-full md:w-56">
             <select
+              id="culture-category"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="w-full py-2.5 px-3 text-sm rounded-lg border border-[#D7C8B3] bg-white text-[#241F2B] focus:outline-none focus:ring-2 focus:ring-[#34205B]"
@@ -102,9 +112,11 @@ export const DiscoverPage: React.FC = () => {
             </select>
           </div>
 
-          {/* Status Filter */}
+              {/* Status Filter */}
+              <label htmlFor="culture-review-status" className="sr-only">Filter by fixture review label</label>
           <div className="w-full md:w-56">
             <select
+              id="culture-review-status"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="w-full py-2.5 px-3 text-sm rounded-lg border border-[#D7C8B3] bg-white text-[#241F2B] focus:outline-none focus:ring-2 focus:ring-[#34205B]"
@@ -133,7 +145,7 @@ export const DiscoverPage: React.FC = () => {
         {/* Filter Summary Tags (Unboxed Text with Separators) */}
         <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between text-xs text-stone-500 font-sans">
           <div className="flex items-center gap-2">
-            <span>Showing {records.length} documented records</span>
+            <span>Showing {records.length} fixture records</span>
             {searchQuery && (
               <>
                 <span aria-hidden="true">·</span>
@@ -148,7 +160,7 @@ export const DiscoverPage: React.FC = () => {
             )}
           </div>
           <span className="font-mono text-[11px] text-[#8A68C7]">
-            PROVENANCE STANDARDS ACTIVE
+            SAMPLE FIXTURES · VERIFY BEFORE RELYING ON THEM
           </span>
         </div>
       </div>
@@ -158,8 +170,17 @@ export const DiscoverPage: React.FC = () => {
         <div className="py-20 text-center space-y-3">
           <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
-            Querying cultural repository...
+            Loading local sample records...
           </p>
+        </div>
+      ) : loadError ? (
+        <div role="alert" className="bg-rose-50 rounded-xl border border-rose-200 p-8 text-center max-w-xl mx-auto space-y-4">
+          <AlertCircle className="w-8 h-8 text-rose-700 mx-auto" />
+          <h3 className="font-serif text-xl font-medium text-rose-900">The sample archive could not be loaded</h3>
+          <p className="text-sm text-rose-800">This prototype could not retrieve its local fixture data. Please try again.</p>
+          <button onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md">
+            Retry
+          </button>
         </div>
       ) : records.length === 0 ? (
         <div className="bg-white rounded-xl border border-[#D7C8B3] p-12 text-center max-w-xl mx-auto space-y-4">
@@ -167,10 +188,10 @@ export const DiscoverPage: React.FC = () => {
             <AlertCircle className="w-6 h-6 text-[#8A68C7]" />
           </div>
           <h3 className="font-serif text-xl font-medium text-[#34205B]">
-            No verified cultural records matched your search
+            No sample records matched your search
           </h3>
           <p className="text-xs text-stone-600 leading-relaxed">
-            In accordance with Team Àṣà’s provenance policy, CultureLens does not generate fictional entries when records are missing. You can suggest a topic or submit community documentation.
+            The current sample dataset has no match for these terms. You can clear filters or preview the local-only contribution form.
           </p>
           <div className="pt-2 flex justify-center gap-3">
             <button
@@ -190,11 +211,8 @@ export const DiscoverPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {records.map((record) => (
-            <article
-              key={record.id}
-              onClick={() => navigate(`/culture/${record.slug}`)}
-              className="group cursor-pointer bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7] transition-all flex flex-col justify-between"
-            >
+            <article key={record.id} className="group bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7] transition-all flex flex-col justify-between">
+              <a href={`#/culture/${record.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/culture/${record.slug}`); }} className="flex h-full flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#34205B]" aria-label={`Read sample record: ${record.title}`}>
               <div>
                 <div className="relative aspect-[16/10] overflow-hidden bg-stone-100">
                   <img
@@ -233,6 +251,7 @@ export const DiscoverPage: React.FC = () => {
                   Read Record <ArrowRight className="w-3.5 h-3.5" />
                 </span>
               </div>
+              </a>
             </article>
           ))}
         </div>
@@ -248,7 +267,7 @@ export const DiscoverPage: React.FC = () => {
           onClick={() => navigate('/contribute')}
           className="text-xs font-medium text-[#34205B] hover:text-[#8A68C7] underline underline-offset-4 cursor-pointer"
         >
-          Submit cultural context for peer review →
+          Preview the local-only contribution form →
         </button>
       </div>
 

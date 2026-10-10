@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { apiService } from '../services/apiService';
 import { ArtisanProfile, CulturalExperience, CulturalRecord } from '../types';
@@ -33,6 +33,39 @@ export const ArtisanDetailPage: React.FC = () => {
   const [inquiryEmail, setInquiryEmail] = useState('');
   const [inquiryMessage, setInquiryMessage] = useState('');
   const [inquirySent, setInquirySent] = useState(false);
+  const inquiryDialogRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!inquiryOpen) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialog = inquiryDialogRef.current;
+    (dialog?.querySelector<HTMLElement>('input, textarea') ?? dialog?.querySelector<HTMLElement>('button'))?.focus();
+
+    const handleDialogKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setInquiryOpen(false);
+        return;
+      }
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusable = [...dialog.querySelectorAll<HTMLElement>('button, input, textarea, [href], [tabindex]:not([tabindex="-1"])')]
+        .filter((element) => !element.hasAttribute('disabled'));
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleDialogKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleDialogKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [inquiryOpen]);
 
   useEffect(() => {
     let isMounted = true;
@@ -161,7 +194,7 @@ export const ArtisanDetailPage: React.FC = () => {
               </span>
               <span aria-hidden="true">·</span>
               <span className="text-emerald-700 font-medium">
-                Consented Public Profile
+                Illustrative prototype profile
               </span>
             </div>
 
@@ -176,7 +209,7 @@ export const ArtisanDetailPage: React.FC = () => {
                   className="px-5 py-2.5 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer flex items-center gap-2 shadow-sm"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Send direct craft inquiry</span>
+                  <span>Preview inquiry form · not sent</span>
                 </button>
               )}
 
@@ -189,7 +222,7 @@ export const ArtisanDetailPage: React.FC = () => {
                   className="px-5 py-2.5 text-xs font-medium text-[#34205B] bg-[#F4EFE5] hover:bg-[#D7C8B3]/60 border border-[#D7C8B3] rounded-md transition-colors cursor-pointer flex items-center gap-2"
                 >
                   <Calendar className="w-3.5 h-3.5 text-[#8A68C7]" />
-                  <span>View bookable workshops ({experiences.length})</span>
+                  <span>View sample workshop cards ({experiences.length})</span>
                 </button>
               )}
             </div>
@@ -239,7 +272,7 @@ export const ArtisanDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Bookable Workshops Section */}
+          {/* Sample Workshop Cards */}
           <div id="workshops-section" className="space-y-4 pt-4 border-t border-[#D7C8B3]">
             <div className="flex items-center justify-between">
               <div>
@@ -294,7 +327,7 @@ export const ArtisanDetailPage: React.FC = () => {
                         onClick={() => navigate(`/experiences/${exp.slug}`)}
                         className="w-full sm:w-auto px-4 py-2 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer"
                       >
-                        Reserve Workshop
+                        Preview Booking Demo
                       </button>
                     </div>
                   </div>
@@ -314,7 +347,7 @@ export const ArtisanDetailPage: React.FC = () => {
               Associated Cultural Heritage Records
             </h3>
             <p className="text-xs text-stone-600 leading-relaxed">
-              This artisan’s practice directly aligns with documented cultural records in our archive:
+              These illustrative profile and record fixtures are associated for the interface demo only; neither is independently verified:
             </p>
             <div className="space-y-3">
               {associatedRecords.map((rec) => (
@@ -335,14 +368,14 @@ export const ArtisanDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Privacy & Safe Location Guarantee */}
+          {/* Sample Location Disclosure */}
           <div className="bg-white rounded-xl border border-[#D7C8B3] p-5 space-y-3 text-xs text-stone-600">
             <div className="flex items-center gap-2 text-[#34205B] font-medium">
               <ShieldCheck className="w-4 h-4 text-[#8A68C7]" />
-              <span>Location Privacy Protection</span>
+              <span>Sample Location Notice</span>
             </div>
             <p className="leading-relaxed">
-              CultureLens displays approximate public arts districts rather than private residential addresses to safeguard artisan safety and privacy. Precise studio directions are shared only upon confirmed booking.
+              Locations shown are sample fixture text, not verified directions. This prototype does not confirm bookings or share private studio details.
             </p>
           </div>
 
@@ -353,13 +386,14 @@ export const ArtisanDetailPage: React.FC = () => {
       {/* Inquiry Modal */}
       {inquiryOpen && (
         <div className="fixed inset-0 z-50 bg-[#241F2B]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl border border-[#D7C8B3] shadow-xl max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+          <div ref={inquiryDialogRef} role="dialog" aria-modal="true" aria-labelledby="inquiry-dialog-title" className="bg-white rounded-xl border border-[#D7C8B3] shadow-xl max-w-lg w-full p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-stone-200 pb-3">
-              <h3 className="font-serif text-lg font-medium text-[#34205B]">
+              <h3 id="inquiry-dialog-title" className="font-serif text-lg font-medium text-[#34205B]">
                 Inquire with {artisan.displayName}
               </h3>
               <button
                 onClick={() => setInquiryOpen(false)}
+                aria-label="Close inquiry preview"
                 className="p-1 text-stone-400 hover:text-stone-700 rounded-md"
               >
                 <X className="w-5 h-5" />
@@ -369,45 +403,49 @@ export const ArtisanDetailPage: React.FC = () => {
             {inquirySent ? (
               <div className="py-8 text-center space-y-3">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h4 className="font-serif text-lg font-medium text-[#34205B]">Inquiry Transmitted</h4>
+                <h4 className="font-serif text-lg font-medium text-[#34205B]">Local Demo Preview</h4>
                 <p className="text-xs text-stone-600 max-w-sm mx-auto">
-                  Your message has been sent to the artisan's approved communication desk. They will follow up via your provided email address.
+                  Nothing was sent or saved. No artisan is contacted and no reply will be received. Please do not enter real contact details in this demo.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleInquirySubmit} className="space-y-4 text-xs">
+                <p className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-900">Local UI preview only. Do not enter real personal information; this form has no delivery service.</p>
                 <div>
-                  <label className="block font-medium text-stone-700 mb-1">Your Full Name</label>
+                  <label htmlFor="inquiry-name" className="block font-medium text-stone-700 mb-1">Sample Name</label>
                   <input
+                    id="inquiry-name"
                     type="text"
                     required
                     value={inquiryName}
                     onChange={(e) => setInquiryName(e.target.value)}
-                    placeholder="e.g. Adebayo Adeleke"
+                    placeholder="Sample Guest"
                     className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-800 focus:ring-2 focus:ring-[#34205B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-stone-700 mb-1">Your Email</label>
+                  <label htmlFor="inquiry-email" className="block font-medium text-stone-700 mb-1">Demo Email</label>
                   <input
+                    id="inquiry-email"
                     type="email"
                     required
                     value={inquiryEmail}
                     onChange={(e) => setInquiryEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="demo@example.invalid"
                     className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-800 focus:ring-2 focus:ring-[#34205B]"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-medium text-stone-700 mb-1">Message or Special Project Inquiry</label>
+                  <label htmlFor="inquiry-message" className="block font-medium text-stone-700 mb-1">Demo Message (no sensitive details)</label>
                   <textarea
+                    id="inquiry-message"
                     rows={4}
                     required
                     value={inquiryMessage}
                     onChange={(e) => setInquiryMessage(e.target.value)}
-                    placeholder="Describe what you wish to ask or custom commission..."
+                    placeholder="Sample question only; no real contact or sensitive information."
                     className="w-full p-2.5 rounded-md border border-[#D7C8B3] text-stone-800 focus:ring-2 focus:ring-[#34205B]"
                   />
                 </div>
@@ -425,7 +463,7 @@ export const ArtisanDetailPage: React.FC = () => {
                     className="px-5 py-2 font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md flex items-center gap-1.5 cursor-pointer"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>Send Inquiry</span>
+                    <span>Preview Local Confirmation</span>
                   </button>
                 </div>
               </form>

@@ -61,7 +61,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               <p className="text-base sm:text-lg text-[#241F2B]/85 font-sans leading-relaxed max-w-2xl">
-                Discover documented Nigerian cultural heritage, uncover the ancestral context behind ancient practices, and connect directly with the master artisans who preserve these living crafts.
+                Explore illustrative Nigerian cultural-record and artisan-profile prototypes. Sample text, images, identities, historical claims, and citations are not independently verified.
               </p>
 
               {/* Cultural Search Bar */}
@@ -124,7 +124,7 @@ export const HomePage: React.FC = () => {
               {/* Curatorial Provenance Trust Line */}
               <div className="pt-2 flex items-center gap-3 text-xs text-stone-500 font-sans border-t border-[#D7C8B3]/40">
                 <ShieldCheck className="w-4 h-4 text-[#8A68C7] shrink-0" />
-                <span>Documented with Nigerian cultural elders & university archives. No fabricated sources.</span>
+                <span>Prototype fixtures only. Cultural claims, sources, consent, and profiles require independent community verification.</span>
               </div>
             </div>
 
@@ -133,23 +133,23 @@ export const HomePage: React.FC = () => {
               <div className="relative w-full h-[400px] sm:h-[460px] lg:h-full min-h-[420px] rounded-xl overflow-hidden border border-[#D7C8B3]/80 shadow-md">
                 <img
                   src={heroImg}
-                  alt="Master Nigerian artisan in Lagos weaving intricate Aso-Oke textile on a traditional wooden loom"
+                  alt="Illustrative sample image of a person working at a loom; identity, setting, and attribution are unverified"
                   className="w-full h-full object-cover"
                   referrerPolicy="no-referrer"
                 />
                 {/* Measured Scrim for Typographic Legibility */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#241F2B]/90 via-[#241F2B]/20 to-transparent flex flex-col justify-end p-6 text-white">
                   <div className="text-[11px] font-mono tracking-widest uppercase text-[#D7C8B3]">
-                    LIVING ARCHIVE · FIELD RECORD #01
+                    ILLUSTRATIVE SAMPLE · NOT A FIELD RECORD
                   </div>
                   <h3 className="font-serif text-xl sm:text-2xl font-medium mt-1">
-                    Master Loom Weaving
+                    Sample Loom-Weaving Record
                   </h3>
                   <p className="text-xs text-[#D7C8B3] mt-1 line-clamp-2">
-                    Lagos Island atelier continuing the 15th-century narrow-strip treadle loom lineage of southwestern Nigeria.
+                    Sample descriptive text only. No location, date, lineage, or practitioner attribution is verified.
                   </p>
                   <div className="mt-3 flex items-center justify-between text-xs font-mono text-[#D7C8B3]/80 border-t border-white/20 pt-2">
-                    <span>RECORD: CBAAC ARCHIVE</span>
+                    <span>SOURCE FIELD: SAMPLE / UNVERIFIED</span>
                     <button
                       onClick={() => navigate('/culture/aso-oke-weaving')}
                       className="text-white hover:text-[#D7C8B3] inline-flex items-center gap-1 font-sans text-xs underline cursor-pointer"
@@ -177,7 +177,7 @@ export const HomePage: React.FC = () => {
               The Living Knowledge Loop
             </h2>
             <p className="text-sm text-stone-600 leading-relaxed">
-              Culture is not a static museum exhibit. We unite verified cultural documentation with practical artisan workshops and community knowledge contributions.
+              This prototype demonstrates how cultural records, artisan experiences, and community contributions could be connected after review and consent.
             </p>
           </div>
 
@@ -192,25 +192,25 @@ export const HomePage: React.FC = () => {
               {
                 step: '02',
                 title: 'Learn Context',
-                desc: 'Read documented narratives with explicit provenance, sources, and uncertainty indicators.',
+                desc: 'Review sample narratives, source fields, and uncertainty indicators in the interface.',
                 icon: BookOpen,
               },
               {
                 step: '03',
                 title: 'Find Makers',
-                desc: 'Locate verified master artisans and guilds actively practicing traditional disciplines.',
+                desc: 'Explore illustrative profile layouts; these fixtures do not verify real people or guilds.',
                 icon: Users,
               },
               {
                 step: '04',
                 title: 'Connect & Experience',
-                desc: 'Participate in hands-on workshops, loom sessions, and dye demonstrations in Lagos.',
+                desc: 'Preview example workshop and booking screens; no real sessions can be reserved here.',
                 icon: Calendar,
               },
               {
                 step: '05',
                 title: 'Preserve & Contribute',
-                desc: 'Submit oral histories and community corrections reviewed by authorized cultural elders.',
+                desc: 'Preview a local-only contribution form; submissions are not sent to reviewers.',
                 icon: Sparkles,
               },
             ].map((item) => (
@@ -237,13 +237,13 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
           <div>
             <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              DOCUMENTED TRADITIONS
+              SAMPLE CULTURAL RECORDS
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium mt-1">
               Curated Cultural Records
             </h2>
             <p className="text-sm text-stone-600 mt-1 max-w-xl">
-              Historical context, material techniques, and recorded provenance across Nigerian craft disciplines.
+              Illustrative content shows the proposed record format. Citations and cultural claims have not been independently verified.
             </p>
           </div>
           <button
@@ -257,11 +257,8 @@ export const HomePage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {featuredStories.map((story) => (
-            <article 
-              key={story.id} 
-              onClick={() => navigate(`/culture/${story.slug}`)}
-              className="group cursor-pointer bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7]/50 transition-all flex flex-col"
-            >
+            <article key={story.id} className="group bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7]/50 transition-all flex flex-col">
+              <a href={`#/culture/${story.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/culture/${story.slug}`); }} aria-label={`Read sample record: ${story.title}`} className="flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#34205B]">
               <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
                 <img
                   src={story.imageUrl}
@@ -296,6 +293,7 @@ export const HomePage: React.FC = () => {
                   </span>
                 </div>
               </div>
+              </a>
             </article>
           ))}
         </div>
@@ -310,10 +308,10 @@ export const HomePage: React.FC = () => {
                 HERITAGE PRACTITIONERS
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl font-medium mt-1 text-white">
-                Meet the Master Artisans
+                Illustrative Artisan Profiles
               </h2>
               <p className="text-sm text-[#D7C8B3]/80 mt-1 max-w-xl">
-                Every listed practitioner has opted in to share their craft story, workshop area, and authentic cultural lineage.
+                These are prototype fixtures, not confirmed identities, consent records, availability, or endorsements.
               </p>
             </div>
             <button
@@ -327,10 +325,12 @@ export const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {featuredArtisans.map((artisan) => (
-              <div 
+              <a
                 key={artisan.id}
-                onClick={() => navigate(`/artisans/${artisan.slug}`)}
-                className="group cursor-pointer bg-[#241F2B] rounded-xl border border-[#D7C8B3]/20 overflow-hidden hover:border-[#8A68C7] transition-all flex flex-col justify-between"
+                href={`#/artisans/${artisan.slug}`}
+                onClick={(event) => { event.preventDefault(); navigate(`/artisans/${artisan.slug}`); }}
+                aria-label={`Open illustrative profile: ${artisan.displayName}`}
+                className="group bg-[#241F2B] rounded-xl border border-[#D7C8B3]/20 overflow-hidden hover:border-[#8A68C7] transition-all flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D7C8B3]"
               >
                 <div className="p-6 space-y-4">
                   <div className="flex items-center gap-4">
@@ -372,7 +372,7 @@ export const HomePage: React.FC = () => {
                     View Profile <ArrowRight className="w-3.5 h-3.5" />
                   </span>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -389,7 +389,7 @@ export const HomePage: React.FC = () => {
               Immersive Cultural Experiences
             </h2>
             <p className="text-sm text-stone-600 mt-1 max-w-xl">
-              Learn directly from master craftspeople in Lagos. Participate in loom weaving, natural indigo vat dyeing, and bead stringing.
+              Preview sample workshop descriptions and booking UI. No real sessions, payments, or artisan arrangements are active in this prototype.
             </p>
           </div>
           <button
@@ -405,8 +405,7 @@ export const HomePage: React.FC = () => {
           {featuredExperiences.map((exp) => (
             <div 
               key={exp.id}
-              onClick={() => navigate(`/experiences/${exp.slug}`)}
-              className="group cursor-pointer bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7]/50 transition-all flex flex-col sm:flex-row"
+              className="group bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7]/50 transition-all flex flex-col sm:flex-row"
             >
               <div className="sm:w-2/5 relative aspect-square sm:aspect-auto overflow-hidden bg-stone-100">
                 <img
@@ -429,7 +428,7 @@ export const HomePage: React.FC = () => {
                   </div>
 
                   <h3 className="font-serif text-lg font-medium text-[#34205B] group-hover:text-[#8A68C7] transition-colors leading-snug">
-                    {exp.title}
+                    <a href={`#/experiences/${exp.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/experiences/${exp.slug}`); }} className="focus-visible:outline-none focus-visible:underline">{exp.title}</a>
                   </h3>
 
                   <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
@@ -439,7 +438,7 @@ export const HomePage: React.FC = () => {
 
                 <div className="pt-3 border-t border-[#D7C8B3]/40 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-stone-500 block">Price per guest</span>
+                    <span className="text-xs text-stone-500 block">Sample price per guest · not an offer</span>
                     <span className="font-mono text-base font-semibold text-[#34205B] tabular-nums">
                       ₦{exp.priceNaira.toLocaleString()}
                     </span>
@@ -452,7 +451,7 @@ export const HomePage: React.FC = () => {
                     }}
                     className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer"
                   >
-                    Reserve workshop
+                    Preview booking demo
                   </button>
                 </div>
               </div>
@@ -461,19 +460,19 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. Ask CultureLens Preview: Grounded AI Discovery Banner */}
+      {/* 6. Ask CultureLens Preview: Local Sample Responses */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-[#F4EFE5] border-2 border-[#D7C8B3] rounded-2xl p-8 sm:p-12 relative overflow-hidden">
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
               <Sparkles className="w-4 h-4" />
-              <span>Gemma AI · Grounded Cultural Discovery</span>
+              <span>Sample Q&A · Future backend integration</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium leading-tight">
               Have questions about Nigerian customs, loom mechanics, or craft symbols?
             </h2>
             <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
-              Ask CultureLens uses strict retrieval-augmented grounding from verified platform archives. If evidence is unverified or conflicting, the system tells you honestly instead of inventing answers.
+              This prototype returns canned keyword-matched sample answers, not Gemma or live retrieval. The answer content and citations require review before real-world use.
             </p>
             <div className="pt-4 flex flex-wrap items-center gap-4">
               <button

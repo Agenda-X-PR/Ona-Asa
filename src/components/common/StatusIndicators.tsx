@@ -8,28 +8,28 @@ export const CulturalStatusLabel: React.FC<{ status: CulturalRecordStatus }> = (
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-800">
           <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>Archivally Documented</span>
+          <span>Fixture label: Archivally Documented</span>
         </span>
       );
     case 'community_reviewed':
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#34205B]">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#8A68C7]" aria-hidden="true" />
-          <span>Community Reviewed</span>
+          <span>Fixture label: Community Reviewed</span>
         </span>
       );
     case 'under_review':
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-800">
           <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>Under Peer Review</span>
+          <span>Fixture label: Under Peer Review</span>
         </span>
       );
     case 'disputed':
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-800">
           <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>Contested Tradition</span>
+          <span>Fixture label: Contested Tradition</span>
         </span>
       );
   }
@@ -41,21 +41,21 @@ export const ArtisanVerificationLabel: React.FC<{ status: ArtisanVerificationSta
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#34205B]">
           <CheckCircle2 className="w-3.5 h-3.5 text-[#8A68C7]" aria-hidden="true" />
-          <span>Verified Master Artisan</span>
+          <span>Fixture label: Verified</span>
         </span>
       );
     case 'community_acknowledged':
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-700">
           <Sparkles className="w-3.5 h-3.5 text-stone-500" aria-hidden="true" />
-          <span>Guild Acknowledged</span>
+          <span>Fixture label: Guild Acknowledged</span>
         </span>
       );
     case 'pending':
       return (
         <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-800">
           <Clock className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>Verification Pending</span>
+          <span>Fixture label: Verification Pending</span>
         </span>
       );
   }
