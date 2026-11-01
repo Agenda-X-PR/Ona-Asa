@@ -394,11 +394,11 @@
   .definition-list dd { margin: 0; }
 }
 
-/* Motion. The one authored moment is the home wall being cast: each panel's
-   pattern is revealed top to bottom like metal filling a mould. */
-@keyframes pour {
-  from { clip-path: inset(0 0 100% 0); }
-  to { clip-path: inset(0 0 0 0); }
+/* Motion. The one authored moment is the home hero: the photo settles into
+   place while the heading and search rise in. */
+@keyframes settle {
+  from { transform: scale(1.06); filter: saturate(0.6); }
+  to { transform: none; filter: none; }
 }
 @keyframes rise {
   from { opacity: 0; transform: translateY(6px) scale(0.985); }
@@ -408,9 +408,11 @@
   to { transform: rotate(360deg); }
 }
 
-.pour {
-  animation: pour 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+.hero-photo {
+  animation: settle 1600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.hero-copy {
+  animation: rise 700ms cubic-bezier(0.16, 1, 0.3, 1) 150ms both;
 }
 .rise {
   animation: rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both;

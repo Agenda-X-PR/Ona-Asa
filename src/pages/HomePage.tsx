@@ -4,6 +4,10 @@ import { Link, useRouter } from '../lib/router';
 import { ARTISANS, CULTURAL_RECORDS, EXPERIENCES } from '../data/mockData';
 import { CRAFT_NAMES, Motif } from '../components/Motif';
 import { Monogram, StatusMark, VerificationMark, formatNaira } from '../components/ui';
+import { PHOTOS } from '../data/images';
+
+const heroPhoto = PHOTOS.adire;
+
 
 const TOPICS = ['Aṣọ-Òkè weaving', 'Adire indigo', 'Ìlẹ̀kẹ̀ beads', 'Terracotta pottery', 'Lost-wax bronze', 'Uli'];
 
@@ -25,8 +29,7 @@ const RecordWall: React.FC = () => (
         <Link to={`/culture/${record.slug}`} className="plaque-link h-full">
           <article className="plaque nails flex h-full flex-col p-2.5">
             <div
-              className={`motif-field pour rounded-[2px] ${index === 0 ? 'aspect-[16/9] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}
-              style={{ '--i': index } as React.CSSProperties}
+              className={`motif-field rounded-[2px] ${index === 0 ? 'aspect-[16/9] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}
             >
               <Motif craft={record.craftKey} scale={index === 0 ? 1.25 : 1} />
             </div>
@@ -58,50 +61,87 @@ export const HomePage: React.FC = () => {
 
   return (
     <>
-      <section className="page grid grid-cols-[minmax(0,1fr)] gap-10 pt-10 pb-6 sm:pt-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14">
-        <div className="lg:pt-6">
-          <h1 className="text-[clamp(3rem,8vw,6rem)] leading-[0.92]">Every tradition holds a story.</h1>
-          <p className="measure mt-6 text-[1.125rem] text-ink-soft">
-            Browse sample records of Nigerian crafts, the makers linked to them and the workshops they might teach. Every text, name,
-            citation and image here is illustrative and has not been independently verified.
-          </p>
+      <section className="relative isolate overflow-hidden bg-frame text-frame-ink" aria-labelledby="hero-title">
+        <img
+          src={heroPhoto.large}
+          srcSet={`${heroPhoto.small} 640w, ${heroPhoto.large} 1200w`}
+          sizes="100vw"
+          width={heroPhoto.width}
+          height={heroPhoto.height}
+          alt=""
+          fetchPriority="high"
+          className="hero-photo absolute inset-0 -z-10 h-full w-full object-cover object-[72%_20%] md:object-[60%_35%]"
+        />
+        {/* Darken the photo where the text sits so it stays readable. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(20_15_10/0.92)_0%,rgb(20_15_10/0.7)_45%,rgb(20_15_10/0.15)_100%)] md:bg-[linear-gradient(to_right,rgb(20_15_10/0.9)_0%,rgb(20_15_10/0.72)_42%,rgb(20_15_10/0.05)_75%)]"
+        />
+        <div className="page flex min-h-[min(46rem,88svh)] flex-col justify-end pt-40 pb-10 md:justify-center md:py-24">
+          <div className="hero-copy max-w-[34rem]">
+            <h1 id="hero-title" className="text-[clamp(3rem,7.5vw,5.75rem)] leading-[0.92] text-frame-ink">
+              Every tradition holds a story.
+            </h1>
+            <p className="mt-5 text-[1.125rem] leading-relaxed text-frame-ink/85">
+              Browse sample records of Nigerian crafts, the makers linked to them and the workshops they might teach. Everything here is
+              illustrative and has not been independently verified.
+            </p>
 
-          <form onSubmit={submit} role="search" className="mt-8">
-            <label htmlFor="home-search" className="field-label">
-              Search the records
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="home-search"
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Craft, community or place"
-                className="input"
-              />
-              <button type="submit" className="btn btn-primary shrink-0">
-                <Search className="h-4 w-4" aria-hidden="true" />
-                <span className="sr-only sm:not-sr-only">Search</span>
-              </button>
-            </div>
-          </form>
+            <form onSubmit={submit} role="search" className="mt-7">
+              <label htmlFor="home-search" className="field-label text-frame-ink">
+                Search the records
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="home-search"
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Craft, community or place"
+                  className="input border-transparent text-ink"
+                />
+                <button type="submit" className="btn shrink-0 border border-frame-accent bg-frame-accent font-semibold text-[#1a140c] hover:bg-frame-ink hover:border-frame-ink">
+                  <Search className="h-4 w-4" aria-hidden="true" />
+                  <span className="sr-only sm:not-sr-only">Search</span>
+                </button>
+              </div>
+            </form>
 
-          <div className="mt-5">
-            <h2 className="sr-only">Topics</h2>
-            <ul className="flex flex-wrap gap-x-4 gap-y-2 text-[0.9375rem]">
-              {TOPICS.map((topic) => (
-                <li key={topic}>
-                  <Link to="/discover" query={{ q: topic }} className="link">
-                    {topic}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <nav aria-label="Popular topics" className="mt-5">
+              <ul className="flex flex-wrap gap-2 text-[0.9375rem]">
+                {TOPICS.map((topic) => (
+                  <li key={topic}>
+                    <Link
+                      to="/discover"
+                      query={{ q: topic }}
+                      className="inline-block rounded-[3px] border border-frame-ink/30 px-3 py-1.5 text-frame-ink no-underline transition-colors hover:border-frame-accent hover:text-frame-accent"
+                    >
+                      {topic}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
+        <p className="absolute right-4 bottom-3 hidden max-w-[24rem] rounded-[3px] bg-frame/80 px-2.5 py-1.5 text-right text-[0.8125rem] text-frame-ink/85 md:block">
+          Illustrative photo of indigo resist cloths drying above dye pots. It does not show the people named on this site.
+        </p>
+      </section>
+      <p className="page pt-2 text-[0.8125rem] text-ink-soft md:hidden">
+        Illustrative photo of indigo resist cloths drying above dye pots. It does not show the people named on this site.
+      </p>
 
-        <div className="rounded-[4px] bg-ground-deep p-3 sm:p-4">
-          <h2 className="sr-only">Sample records</h2>
+      <section className="page mt-16" aria-labelledby="records-title">
+        <div className="opener">
+          <h2 id="records-title" className="text-[clamp(2rem,4vw,3rem)]">
+            Records
+          </h2>
+        </div>
+        <p className="measure mt-3 text-ink-soft">
+          Six sample records, each marked with its craft's pattern. Their citations and claims have not been checked.
+        </p>
+        <div className="mt-6 rounded-[4px] bg-ground-deep p-3 sm:p-4">
           <RecordWall />
         </div>
       </section>

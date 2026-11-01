@@ -1,6 +1,7 @@
 # CultureLens design system: the plaque wall
 
-Records hang like cast panels on a pillar. The idea comes from the Benin court
+The home page opens on a full-width photo of the craft itself. Below it,
+records hang like cast panels on a pillar. The idea comes from the Benin court
 plaques, which were nailed in rows to palace pillars and worked as a visual
 archive. Here every record, workshop and maker is a panel whose ground is chased
 with its own craft's pattern. Only the structure is borrowed (rectangular
@@ -81,8 +82,9 @@ apart by pattern, never by colour.
 
 ## Motion
 
-- The one authored moment: on the home page the wall's patterns pour in top to
-  bottom, staggered 90ms (`.pour`, clip-path, 900ms, expo ease-out).
+- The one authored moment: the home hero photo settles from a slight zoom and
+  desaturation while the heading and search rise in (`.hero-photo`,
+  `.hero-copy`, expo ease-out).
 - Responses to actions: dialogs and confirmations rise in (`.rise`, 260ms).
   Linked panels lift 2px on hover.
 - `prefers-reduced-motion: reduce` removes all of it.
