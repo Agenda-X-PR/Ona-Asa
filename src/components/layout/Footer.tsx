@@ -25,7 +25,7 @@ const COLUMNS = [
 ];
 
 export const Footer: React.FC = () => (
-  <footer className="mt-24 bg-frame text-frame-ink">
+  <footer className="bg-frame text-frame-ink">
     <div className="page grid grid-cols-[minmax(0,1fr)] gap-10 py-14 md:grid-cols-[1.3fr_1fr_1fr]">
       <div className="space-y-4">
         <p className="display text-[2.25rem]">CultureLens</p>

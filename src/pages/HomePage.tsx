@@ -3,48 +3,13 @@ import { ArrowRight, Search } from 'lucide-react';
 import { Link, useRouter } from '../lib/router';
 import { ARTISANS, CULTURAL_RECORDS, EXPERIENCES } from '../data/mockData';
 import { CRAFT_NAMES, Motif } from '../components/Motif';
-import { Monogram, StatusMark, VerificationMark, formatNaira } from '../components/ui';
+import { Monogram, StatusMark, formatNaira } from '../components/ui';
 import { PHOTOS } from '../data/images';
 
 const heroPhoto = PHOTOS.adire;
 
 
 const TOPICS = ['Aṣọ-Òkè weaving', 'Adire indigo', 'Ìlẹ̀kẹ̀ beads', 'Terracotta pottery', 'Lost-wax bronze', 'Uli'];
-
-/** The wall: every sample record hangs here as a cast panel. */
-const RecordWall: React.FC = () => (
-  <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" aria-label="Sample cultural records">
-    {CULTURAL_RECORDS.map((record, index) => (
-      <li
-        key={record.id}
-        className={
-          index === 0
-            ? 'col-span-2 lg:row-span-2'
-            : // On two columns an odd last panel would hang alone; let it span the row.
-              index === CULTURAL_RECORDS.length - 1 && (CULTURAL_RECORDS.length - 1) % 2 === 1
-              ? 'col-span-2 lg:col-span-1'
-              : ''
-        }
-      >
-        <Link to={`/culture/${record.slug}`} className="plaque-link h-full">
-          <article className="plaque nails flex h-full flex-col p-2.5">
-            <div
-              className={`motif-field rounded-[2px] ${index === 0 ? 'aspect-[16/9] lg:aspect-auto lg:flex-1' : 'aspect-[4/3]'}`}
-            >
-              <Motif craft={record.craftKey} scale={index === 0 ? 1.25 : 1} />
-            </div>
-            <div className="px-1.5 pt-3 pb-1.5">
-              <h3 className={`plaque-title ${index === 0 ? 'text-[clamp(1.6rem,3vw,2.4rem)]' : 'text-[1.35rem]'}`}>
-                {record.title.split(':')[0]}
-              </h3>
-              <p className="mt-1 text-[0.875rem] text-ink-soft">{CRAFT_NAMES[record.craftKey]}</p>
-            </div>
-          </article>
-        </Link>
-      </li>
-    ))}
-  </ul>
-);
 
 export const HomePage: React.FC = () => {
   const { navigate } = useRouter();
@@ -124,124 +89,175 @@ export const HomePage: React.FC = () => {
             </nav>
           </div>
         </div>
-        <p className="absolute right-4 bottom-3 hidden max-w-[24rem] rounded-[3px] bg-frame/80 px-2.5 py-1.5 text-right text-[0.8125rem] text-frame-ink/85 md:block">
-          Illustrative photo of indigo resist cloths drying above dye pots. It does not show the people named on this site.
-        </p>
-      </section>
-      <p className="page pt-2 text-[0.8125rem] text-ink-soft md:hidden">
-        Illustrative photo of indigo resist cloths drying above dye pots. It does not show the people named on this site.
-      </p>
-
-      <section className="page mt-16" aria-labelledby="records-title">
-        <div className="opener">
-          <h2 id="records-title" className="text-[clamp(2rem,4vw,3rem)]">
-            Records
-          </h2>
-        </div>
-        <p className="measure mt-3 text-ink-soft">
-          Six sample records, each marked with its craft's pattern. Their citations and claims have not been checked.
-        </p>
-        <div className="mt-6 rounded-[4px] bg-ground-deep p-3 sm:p-4">
-          <RecordWall />
-        </div>
       </section>
 
-      <section className="page mt-20" aria-labelledby="makers-title">
-        <div className="opener">
-          <h2 id="makers-title" className="text-[clamp(2rem,4vw,3rem)]">
-            Makers
-          </h2>
-        </div>
-        <p className="measure mt-3 text-ink-soft">
-          Illustrative profiles. They are not confirmed people, and they record no consent, availability or endorsement.
-        </p>
-        <ul className="mt-6 divide-y divide-rule border-y border-rule">
-          {makers.map((artisan) => (
-            <li key={artisan.id}>
-              <Link to={`/artisans/${artisan.slug}`} className="group grid grid-cols-[auto_1fr] items-center gap-x-5 gap-y-1 py-5 no-underline sm:grid-cols-[auto_1fr_auto]">
-                <Monogram name={artisan.displayName} craft={artisan.craftKey} />
-                <div>
-                  <h3 className="text-[1.6rem] group-hover:underline">{artisan.displayName}</h3>
-                  <p className="text-[0.9375rem] text-ink-soft">
-                    {artisan.craft}, {artisan.publicLocation}
-                  </p>
-                </div>
-                <div className="col-start-2 sm:col-start-3">
-                  <VerificationMark status={artisan.verificationStatus} />
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <Link to="/artisans" className="link mt-4 inline-flex items-center gap-1.5">
-          All five sample profiles <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
-      </section>
-
-      <section className="page mt-20 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" aria-labelledby="workshops-title">
-        <div>
-          <div className="opener">
-            <h2 id="workshops-title" className="text-[clamp(2rem,4vw,3rem)]">
-              Workshops
+      <section className="page mt-20" aria-labelledby="records-title">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <div>
+            <h2 id="records-title" className="text-[clamp(2.25rem,4.5vw,3.5rem)]">
+              Six crafts, six records
             </h2>
+            <p className="measure mt-3 text-ink-soft">
+              Each record tells a craft's story, where it comes from and how it is made. The sources have not been checked yet.
+            </p>
           </div>
-          <p className="measure mt-3 text-ink-soft">
-            Sample listings with a booking flow you can try. Requests stay in this browser; no seat is held and nothing is paid.
-          </p>
-          <ul className="mt-6 space-y-4">
-            {workshops.map((exp) => (
-              <li key={exp.id} className="plaque grid grid-cols-[4.5rem_1fr] gap-4 p-3 sm:grid-cols-[6rem_1fr_auto] sm:items-center">
-                <div className="motif-field h-full min-h-20 rounded-[2px]">
-                  <Motif craft={exp.craftKey} scale={0.8} />
-                </div>
-                <div>
-                  <h3 className="text-[1.3rem] leading-tight">
-                    <Link to={`/experiences/${exp.slug}`} className="no-underline hover:underline">
-                      {exp.title}
-                    </Link>
-                  </h3>
-                  <p className="mt-1 text-[0.9375rem] text-ink-soft">
-                    {exp.durationHours} hours, sample price {formatNaira(exp.priceNaira)} a guest
-                  </p>
-                </div>
+          <Link to="/discover" className="link inline-flex items-center gap-1.5">
+            Search all records <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+
+        <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {CULTURAL_RECORDS.map((record) => {
+            const photo = record.photo ? PHOTOS[record.photo] : undefined;
+            const [name, subtitle] = record.title.split(/:\s*/);
+            return (
+              <li key={record.id}>
+                <Link to={`/culture/${record.slug}`} className="group block no-underline">
+                  <article>
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-ground-deep">
+                      {photo ? (
+                        <img
+                          src={photo.small}
+                          width={photo.width}
+                          height={photo.height}
+                          alt={photo.alt}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <div className="motif-field h-full w-full bg-ground-deep">
+                          <Motif craft={record.craftKey} scale={1.3} />
+                        </div>
+                      )}
+                      <span className="absolute bottom-3 left-3 rounded-[2px] bg-frame/85 px-2 py-1 text-[0.8125rem] text-frame-ink">
+                        {CRAFT_NAMES[record.craftKey]}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-[1.9rem] leading-none group-hover:underline group-hover:decoration-2 group-hover:underline-offset-4">
+                      {name}
+                    </h3>
+                    {subtitle && <p className="mt-1.5 font-semibold leading-snug">{subtitle}</p>}
+                    <p className="mt-2 line-clamp-2 text-[0.9375rem] text-ink-soft">{record.shortDescription}</p>
+                    <div className="mt-3">
+                      <StatusMark status={record.status} />
+                    </div>
+                  </article>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className="mt-24 border-y border-rule bg-face/60 py-16" aria-labelledby="makers-title">
+        <div className="page">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+            <div>
+              <h2 id="makers-title" className="text-[clamp(2.25rem,4.5vw,3.5rem)]">
+                In the makers' words
+              </h2>
+              <p className="measure mt-3 text-ink-soft">
+                Sample profiles and sample quotes. They are not confirmed people and record no consent or endorsement.
+              </p>
+            </div>
+            <Link to="/artisans" className="link inline-flex items-center gap-1.5">
+              Meet all five makers <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+
+          <ul className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 md:grid-cols-3 md:gap-0 md:divide-x md:divide-rule">
+            {makers.map((artisan) => (
+              <li key={artisan.id} className="md:px-8 md:first:pl-0 md:last:pr-0">
+                <Link to={`/artisans/${artisan.slug}`} className="group flex h-full flex-col no-underline">
+                  <blockquote className="display flex-1 text-[clamp(1.5rem,2.4vw,1.9rem)] leading-[1.08] font-[650]">
+                    <span aria-hidden="true" className="mb-1 block text-[3rem] leading-[0.6] text-brass">“</span>
+                    {artisan.quote}
+                  </blockquote>
+                  <div className="mt-6 flex items-center gap-4 border-t border-rule pt-4">
+                    <Monogram name={artisan.displayName} craft={artisan.craftKey} />
+                    <div>
+                      <p className="display text-[1.4rem] group-hover:underline">{artisan.displayName}</p>
+                      <p className="text-[0.875rem] leading-snug text-ink-soft">{artisan.craft}</p>
+                    </div>
+                  </div>
+                </Link>
               </li>
             ))}
           </ul>
-          <Link to="/experiences" className="link mt-4 inline-flex items-center gap-1.5">
+        </div>
+      </section>
+
+      <section className="page mt-24" aria-labelledby="workshops-title">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+          <div>
+            <h2 id="workshops-title" className="text-[clamp(2.25rem,4.5vw,3.5rem)]">
+              Learn it with your hands
+            </h2>
+            <p className="measure mt-3 text-ink-soft">
+              Sample workshops with a booking flow you can try. Requests stay in this browser; no seat is held and nothing is paid.
+            </p>
+          </div>
+          <Link to="/experiences" className="link inline-flex items-center gap-1.5">
             All workshops <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>
 
-        <div className="space-y-10 lg:pt-20">
+        <ul className="mt-8 divide-y divide-rule border-y border-rule">
+          {workshops.map((exp) => {
+            const photo = exp.photo ? PHOTOS[exp.photo] : undefined;
+            const artisan = ARTISANS.find((a) => a.id === exp.artisanId);
+            return (
+              <li key={exp.id}>
+                <Link
+                  to={`/experiences/${exp.slug}`}
+                  className="group grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-5 gap-y-3 py-6 no-underline sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:gap-x-8"
+                >
+                  <div className="aspect-[4/3] overflow-hidden rounded-[3px] bg-ground-deep">
+                    {photo ? (
+                      <img src={photo.small} width={photo.width} height={photo.height} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="motif-field h-full w-full bg-ground-deep"><Motif craft={exp.craftKey} /></div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-[clamp(1.4rem,2.4vw,1.85rem)] leading-[1.02] group-hover:underline">{exp.title}</h3>
+                    <p className="mt-2 hidden text-ink-soft sm:block">{exp.shortSummary}</p>
+                    <p className="mt-2 text-[0.875rem] text-ink-soft">
+                      {exp.durationHours} hours{artisan ? ` with ${artisan.displayName}` : ''}
+                    </p>
+                  </div>
+                  <p className="col-start-2 sm:col-start-3 sm:text-right">
+                    <span className="display block text-[1.9rem] leading-none tnum">{formatNaira(exp.priceNaira)}</span>
+                    <span className="text-[0.875rem] text-ink-soft">a guest, sample price</span>
+                  </p>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className="-mb-24 mt-24 border-b border-white/10 bg-frame text-frame-ink" aria-label="Ask and contribute">
+        <div className="page grid grid-cols-[minmax(0,1fr)] gap-12 py-16 md:grid-cols-2 md:gap-16">
           <div>
-            <h2 className="text-[1.9rem]">Ask a question</h2>
-            <p className="mt-2 text-ink-soft">
-              Ask about indigo, looms, bronze casting or beads. You get one of four canned sample answers with its related records; no AI
-              model is involved.
+            <h2 className="text-[clamp(2rem,4vw,3rem)] text-frame-ink">Have a question?</h2>
+            <p className="mt-3 max-w-[46ch] text-frame-soft">
+              Ask about indigo, looms, bronze casting or beads. You get the closest of four sample answers with its related records. No AI
+              model is involved yet.
             </p>
-            <Link to="/ask" className="btn btn-quiet mt-4">
+            <Link to="/ask" className="btn mt-6 border border-frame-accent bg-frame-accent text-[#1a140c] hover:border-frame-ink hover:bg-frame-ink">
               Ask CultureLens
             </Link>
           </div>
-          <div>
-            <h2 className="text-[1.9rem]">Add what you know</h2>
-            <p className="mt-2 text-ink-soft">
-              Try the contribution form for stories, techniques and corrections. Entries are saved in this browser only and are not sent
-              for review.
+          <div className="md:border-l md:border-white/15 md:pl-16">
+            <h2 className="text-[clamp(2rem,4vw,3rem)] text-frame-ink">Know a story?</h2>
+            <p className="mt-3 max-w-[46ch] text-frame-soft">
+              Add a story, a technique or a correction. For now entries are saved in your browser only and are not sent for review.
             </p>
-            <Link to="/contribute" className="btn btn-quiet mt-4">
+            <Link to="/contribute" className="btn mt-6 border border-frame-ink/40 text-frame-ink hover:border-frame-ink">
               Open the contribution form
             </Link>
-          </div>
-          <div>
-            <h2 className="text-[1.9rem]">How records are labelled</h2>
-            <ul className="mt-3 space-y-2">
-              <li><StatusMark status="documented" /></li>
-              <li><StatusMark status="community_reviewed" /></li>
-              <li><StatusMark status="under_review" /></li>
-              <li><StatusMark status="disputed" /></li>
-            </ul>
-            <p className="mt-3 text-[0.9375rem] text-ink-soft">The labels are part of the sample data. No real review has taken place.</p>
           </div>
         </div>
       </section>

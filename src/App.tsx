@@ -78,7 +78,7 @@ export const AppContent: React.FC = () => {
       </p>
       <Header />
       {/* Keyed by path: moving between two records gives a fresh page with no state carried over. */}
-      <main id="main" ref={main} tabIndex={-1} className="flex-1 outline-none">
+      <main id="main" ref={main} tabIndex={-1} className="flex-1 pb-24 outline-none">
         <React.Fragment key={path}>{pageFor(path)}</React.Fragment>
       </main>
       <Footer />
