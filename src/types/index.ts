@@ -1,3 +1,19 @@
+import type { PhotoKey } from '../data/images';
+
+/** Which drawn craft pattern represents an item when no matching photo exists. */
+export type CraftKey = 'aso-oke' | 'adire' | 'ileke' | 'terracotta' | 'bronze' | 'uli' | 'woodcarving';
+
+export const RECORD_CATEGORIES = [
+  'Textiles',
+  'Pottery & Ceramics',
+  'Beadwork',
+  'Metalcraft & Bronze',
+  'Woodcarving',
+  'Oral Heritage',
+] as const;
+
+export type RecordCategory = (typeof RECORD_CATEGORIES)[number];
+
 export type CulturalRecordStatus = 
   | 'documented'
   | 'community_reviewed'
@@ -25,7 +41,7 @@ export interface CulturalRecord {
   title: string;
   nativeName?: string;
   language?: string;
-  category: 'Textiles' | 'Pottery & Ceramics' | 'Beadwork' | 'Metalcraft & Bronze' | 'Woodcarving' | 'Oral Heritage';
+  category: RecordCategory;
   region: string;
   community: string;
   shortDescription: string;
@@ -38,8 +54,9 @@ export interface CulturalRecord {
   sources: SourceReference[];
   relatedCraftSlugs: string[];
   relatedArtisanIds: string[];
-  imageUrl: string;
-  imageCaption: string;
+  craftKey: CraftKey;
+  /** Only set when the photo actually shows this craft. */
+  photo?: PhotoKey;
   lastReviewedDate: string;
 }
 
@@ -52,6 +69,7 @@ export interface ArtisanProfile {
   nativeTitle?: string;
   craft: string;
   craftCategories: string[];
+  craftKey: CraftKey;
   bio: string;
   story: string;
   publicLocation: string; // approximate area to protect privacy
@@ -59,8 +77,6 @@ export interface ArtisanProfile {
   experienceYears: number;
   verificationStatus: ArtisanVerificationStatus;
   publicationStatus: 'published' | 'draft';
-  avatarUrl: string;
-  studioImages: string[];
   associatedRecordSlugs: string[];
   experienceIds: string[];
   quote: string;
@@ -99,7 +115,8 @@ export interface CulturalExperience {
   locationMeetingPoint: string;
   cancellationPolicy: string;
   publicationStatus: 'published' | 'draft';
-  imageUrl: string;
+  craftKey: CraftKey;
+  photo?: PhotoKey;
   sessions: ExperienceSession[];
 }
 
