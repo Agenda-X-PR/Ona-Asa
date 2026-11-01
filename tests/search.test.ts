@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { matchesSearchQuery } from '../src/utils/search';
+import { bestKeywordMatch, countKeywordHits, matchesSearchQuery } from '../src/utils/search';
+import { QNA_KEYWORDS } from '../src/services/apiService';
 
 const fixtures = [
   {
@@ -56,4 +57,26 @@ test('search can match material and technique fields', () => {
   const record = fixtures.find((item) => item.slug === 'benin-bronze-lost-wax');
   assert.ok(record);
   assert.equal(matchesSearchQuery('investment casting', record.fields), true);
+});
+
+
+test('Q&A matching uses whole words, not substrings', () => {
+  // "reason" contains "aso", "broadcast" contains "cast", "dyed" was never a keyword.
+  assert.equal(bestKeywordMatch('What is the reason behind this?', QNA_KEYWORDS), null);
+  assert.equal(bestKeywordMatch('Who broadcast the festival?', QNA_KEYWORDS), null);
+  assert.equal(bestKeywordMatch('Tell me about the association of weavers', QNA_KEYWORDS), 'aso-oke-looms');
+});
+
+test('Q&A matching routes each example question to its answer', () => {
+  assert.equal(bestKeywordMatch('What does natural indigo mean in Yoruba adire?', QNA_KEYWORDS), 'adire-indigo');
+  assert.equal(bestKeywordMatch('How do horizontal and vertical aso-oke looms differ?', QNA_KEYWORDS), 'aso-oke-looms');
+  assert.equal(bestKeywordMatch('What materials were used in Benin bronze casting?', QNA_KEYWORDS), 'benin-bronze-casting');
+  assert.equal(bestKeywordMatch('What do the colours of royal ìlẹ̀kẹ̀ beads signify?', QNA_KEYWORDS), 'ileke-beads');
+});
+
+test('keyword hits accept inflections of longer words only', () => {
+  assert.equal(countKeywordHits('weaving and dyeing', ['weave']), 1);
+  assert.equal(countKeywordHits('the casting process', ['cast']), 1);
+  assert.equal(countKeywordHits('a broadcast', ['cast']), 0);
+  assert.equal(countKeywordHits('Aṣọ-Òkè cloth', ['aso oke']), 1);
 });

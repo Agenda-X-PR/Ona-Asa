@@ -1,10 +1,5 @@
 import { CulturalRecord, ArtisanProfile, CulturalExperience, QnAResponse } from '../types';
 
-import heroCraftsImg from '../assets/images/hero_nigerian_crafts_1791632798829.jpg';
-import potteryStudioImg from '../assets/images/artisan_pottery_studio_1791632811278.jpg';
-import asoOkeCraftImg from '../assets/images/craft_asooke_weaving_1791632821815.jpg';
-import beadmakingImg from '../assets/images/craft_beadmaking_ileke_1791632834337.jpg';
-import adireIndigoImg from '../assets/images/craft_adire_indigo_1791632845279.jpg';
 
 export const CULTURAL_RECORDS: CulturalRecord[] = [
   {
@@ -45,8 +40,8 @@ export const CULTURAL_RECORDS: CulturalRecord[] = [
     ],
     relatedCraftSlugs: ['adire-eleko-indigo', 'ileke-beadwork'],
     relatedArtisanIds: ['art_babatunde_adeyemi'],
-    imageUrl: asoOkeCraftImg,
-    imageCaption: 'Intricate Aso-Oke band woven on a narrow treadle loom with indigo and metallic gold warp threading.',
+    craftKey: 'aso-oke',
+    photo: 'cloth',
     lastReviewedDate: '2026-03-14'
   },
   {
@@ -85,8 +80,8 @@ export const CULTURAL_RECORDS: CulturalRecord[] = [
     ],
     relatedCraftSlugs: ['aso-oke-weaving'],
     relatedArtisanIds: ['art_bisi_folorunsho'],
-    imageUrl: adireIndigoImg,
-    imageCaption: 'Adire resist textiles hanging to aerate and oxidize in a courtyard dye compound.',
+    craftKey: 'adire',
+    photo: 'adire',
     lastReviewedDate: '2026-04-02'
   },
   {
@@ -125,8 +120,8 @@ export const CULTURAL_RECORDS: CulturalRecord[] = [
     ],
     relatedCraftSlugs: ['aso-oke-weaving'],
     relatedArtisanIds: ['art_kemi_balogun'],
-    imageUrl: beadmakingImg,
-    imageCaption: 'Handcrafted coral trade beads and ancient glass beads arrayed on carved wooden tray.',
+    craftKey: 'ileke',
+    photo: 'beads',
     lastReviewedDate: '2026-02-18'
   },
   {
@@ -159,8 +154,8 @@ export const CULTURAL_RECORDS: CulturalRecord[] = [
     ],
     relatedCraftSlugs: ['adire-eleko-indigo'],
     relatedArtisanIds: ['art_omowunmi_bello'],
-    imageUrl: potteryStudioImg,
-    imageCaption: 'Master ceramicist refining an earthenware water pot on a revolving wheel.',
+    craftKey: 'terracotta',
+    photo: 'pottery',
     lastReviewedDate: '2026-05-10'
   },
   {
@@ -199,8 +194,7 @@ export const CULTURAL_RECORDS: CulturalRecord[] = [
     ],
     relatedCraftSlugs: ['ileke-beadwork'],
     relatedArtisanIds: ['art_chidiebere_okafor'],
-    imageUrl: heroCraftsImg,
-    imageCaption: 'Guild artisan hand-finishing cast alloy metalwork with traditional chisels.',
+    craftKey: 'bronze',
     lastReviewedDate: '2026-01-22'
   },
   {
@@ -233,8 +227,7 @@ export const CULTURAL_RECORDS: CulturalRecord[] = [
     ],
     relatedCraftSlugs: ['adire-eleko-indigo'],
     relatedArtisanIds: [],
-    imageUrl: adireIndigoImg,
-    imageCaption: 'Traditional graphic motifs rendered with organic botanical resist dyes.',
+    craftKey: 'uli',
     lastReviewedDate: '2026-06-05'
   }
 ];
@@ -247,6 +240,7 @@ export const ARTISANS: ArtisanProfile[] = [
     nativeTitle: 'Ọ̀gá Aṣọ-Òkè',
     craft: 'Master Narrow-Loom Weaver',
     craftCategories: ['Textiles', 'Weaving', 'Aso-Oke'],
+    craftKey: 'aso-oke',
     bio: 'Fourth-generation master weaver preserving the classical Etu and Sanyan weaving lineages with hand-built horizontal treadle looms in Lagos.',
     story: 'Born to a family of weavers originally from the historic weaving town of Iseyin, Babatunde learned the cadence of the loom at age eight beside his grandfather. In his studio on Lagos Island, he combines rare organic wild silk with naturally dyed cotton, ensuring that ceremonial textiles retain their heirloom density and tactile elegance.',
     publicLocation: 'Lagos Island, Lagos',
@@ -254,8 +248,6 @@ export const ARTISANS: ArtisanProfile[] = [
     experienceYears: 28,
     verificationStatus: 'verified',
     publicationStatus: 'published',
-    avatarUrl: heroCraftsImg,
-    studioImages: [heroCraftsImg, asoOkeCraftImg],
     associatedRecordSlugs: ['aso-oke-weaving'],
     experienceIds: ['exp_asooke_workshop'],
     quote: 'The loom is not merely a machine; it is a conversation between your hands, your feet, and the memory of the elders.',
@@ -263,7 +255,7 @@ export const ARTISANS: ArtisanProfile[] = [
       inquiryEnabled: true,
       whatsappInquiry: true,
       callPermitted: false,
-      displayEmail: 'studio.adeyemi@culturelens-demo.ng'
+      displayEmail: 'studio.adeyemi@example.invalid'
     }
   },
   {
@@ -273,6 +265,7 @@ export const ARTISANS: ArtisanProfile[] = [
     nativeTitle: 'Ìyá Àláró',
     craft: 'Senior Adire Indigo Master & Stencilist',
     craftCategories: ['Textiles', 'Indigo Dyeing', 'Adire'],
+    craftKey: 'adire',
     bio: 'Renowned textile custodian specializing in cold-fermented underground indigo dye vats and freehand cassava-paste stenciling.',
     story: 'Alhaja Bisi traces her lineage through the renowned Itoku dyeing compounds of Abeokuta. Operating between Abeokuta and her studio on the Lagos Mainland, she continues to maintain four generational underground earthen dye vats fed with natural wood ash lye and indigenous Elu leaves.',
     publicLocation: 'Yaba / Mainland, Lagos',
@@ -280,8 +273,6 @@ export const ARTISANS: ArtisanProfile[] = [
     experienceYears: 34,
     verificationStatus: 'verified',
     publicationStatus: 'published',
-    avatarUrl: adireIndigoImg,
-    studioImages: [adireIndigoImg, asoOkeCraftImg],
     associatedRecordSlugs: ['adire-eleko-indigo'],
     experienceIds: ['exp_adire_masterclass'],
     quote: 'When you plunge your arms into the blue vat, the dye claims your patience before it blesses the cloth.',
@@ -289,7 +280,7 @@ export const ARTISANS: ArtisanProfile[] = [
       inquiryEnabled: true,
       whatsappInquiry: true,
       callPermitted: true,
-      displayEmail: 'alaro.folorunsho@culturelens-demo.ng'
+      displayEmail: 'alaro.folorunsho@example.invalid'
     }
   },
   {
@@ -299,6 +290,7 @@ export const ARTISANS: ArtisanProfile[] = [
     nativeTitle: 'Adé Ìlẹ̀kẹ̀ Custodian',
     craft: 'Royal Beadmaker & Adornment Historian',
     craftCategories: ['Beadwork', 'Royal Adornment', 'Jewelry'],
+    craftKey: 'ileke',
     bio: 'Artisan researcher and stringer creating ceremonial beaded pieces and modern heirlooms rooted in Yoruba royal color symbology.',
     story: 'Kemi trained under royal bead stringers in Oyo and Ile-Ife before founding her exploratory studio in Lagos. Her practice explores the spiritual significance of coral grades, glass chevron trade beads, and antique brass spacers, hosting masterclasses for young Nigerians rediscovering ancestral adornment.',
     publicLocation: 'Victoria Island / Lekki, Lagos',
@@ -306,8 +298,6 @@ export const ARTISANS: ArtisanProfile[] = [
     experienceYears: 16,
     verificationStatus: 'verified',
     publicationStatus: 'published',
-    avatarUrl: beadmakingImg,
-    studioImages: [beadmakingImg, heroCraftsImg],
     associatedRecordSlugs: ['ileke-beadwork'],
     experienceIds: ['exp_ileke_stringing'],
     quote: 'Each bead carries weight—not just in grams, but in ancestral stories of prestige, protection, and identity.',
@@ -315,7 +305,7 @@ export const ARTISANS: ArtisanProfile[] = [
       inquiryEnabled: true,
       whatsappInquiry: true,
       callPermitted: false,
-      displayEmail: 'kemi.beadworks@culturelens-demo.ng'
+      displayEmail: 'kemi.beadworks@example.invalid'
     }
   },
   {
@@ -325,6 +315,7 @@ export const ARTISANS: ArtisanProfile[] = [
     nativeTitle: 'Amọ̀ Artisan',
     craft: 'Traditional Terracotta Sculptor & Ceramicist',
     craftCategories: ['Pottery & Ceramics', 'Terracotta', 'Sculpture'],
+    craftKey: 'terracotta',
     bio: 'Pioneering ceramicist uniting ancient coil-building methodologies with contemporary studio pottery and organic wood-ash glazes.',
     story: 'Omowunmi began learning pottery in the river communities of Ogun state, mastering pit-firing and natural locust bean water-proofing techniques. Her Lagos workshop conducts immersive masterclasses where travelers and collectors shape tactile earthenware with local river clays.',
     publicLocation: 'Surulere, Lagos',
@@ -332,8 +323,6 @@ export const ARTISANS: ArtisanProfile[] = [
     experienceYears: 19,
     verificationStatus: 'verified',
     publicationStatus: 'published',
-    avatarUrl: potteryStudioImg,
-    studioImages: [potteryStudioImg, beadmakingImg],
     associatedRecordSlugs: ['traditional-terracotta-pottery'],
     experienceIds: ['exp_terracotta_wheel'],
     quote: 'The earth has a memory. When your fingers meet wet clay, you are participating in a craft older than any written word.',
@@ -341,7 +330,7 @@ export const ARTISANS: ArtisanProfile[] = [
       inquiryEnabled: true,
       whatsappInquiry: true,
       callPermitted: true,
-      displayEmail: 'omowunmi.ceramics@culturelens-demo.ng'
+      displayEmail: 'omowunmi.ceramics@example.invalid'
     }
   },
   {
@@ -351,6 +340,7 @@ export const ARTISANS: ArtisanProfile[] = [
     nativeTitle: 'Oka-Igwe & Foundry Master',
     craft: 'Lost-Wax Metallurgy & Traditional Metalcraft',
     craftCategories: ['Metalcraft & Bronze', 'Foundry', 'Sculpture'],
+    craftKey: 'bronze',
     bio: 'Artisan metalworker practicing lost-wax investment casting and bronze sculptural restoration in Lagos.',
     story: 'Chidiebere spent a decade apprenticing in traditional foundry guilds before establishing his studio in Lagos. He creates authentic bronze and brass works using traditional wax modeling and investment plaster, actively lecturing on the metallurgy of ancient West Africa.',
     publicLocation: 'Ikeja / Maryland, Lagos',
@@ -358,8 +348,6 @@ export const ARTISANS: ArtisanProfile[] = [
     experienceYears: 15,
     verificationStatus: 'community_acknowledged',
     publicationStatus: 'published',
-    avatarUrl: heroCraftsImg,
-    studioImages: [heroCraftsImg, potteryStudioImg],
     associatedRecordSlugs: ['benin-bronze-lost-wax'],
     experienceIds: ['exp_bronze_casting_demo'],
     quote: 'To melt metal is to understand transformation. Every plaque we cast holds a moment of living history.',
@@ -367,7 +355,7 @@ export const ARTISANS: ArtisanProfile[] = [
       inquiryEnabled: true,
       whatsappInquiry: true,
       callPermitted: false,
-      displayEmail: 'c.okafor.foundry@culturelens-demo.ng'
+      displayEmail: 'c.okafor.foundry@example.invalid'
     }
   }
 ];
@@ -401,7 +389,8 @@ export const EXPERIENCES: CulturalExperience[] = [
     locationMeetingPoint: 'Adeyemi Weaving Atelier, Freeman Street, Lagos Island',
     cancellationPolicy: 'Full refund up to 48 hours before session start. Cancellations within 48 hours can be rescheduled once without penalty.',
     publicationStatus: 'published',
-    imageUrl: asoOkeCraftImg,
+    craftKey: 'aso-oke',
+    photo: 'loom',
     sessions: [
       {
         id: 'sess_aso_01',
@@ -457,7 +446,8 @@ export const EXPERIENCES: CulturalExperience[] = [
     locationMeetingPoint: 'Mainland Indigo Compound, Commercial Avenue, Yaba, Lagos',
     cancellationPolicy: 'Refunds available up to 72 hours prior to workshop. Rescheduling permitted based on artisan dye schedule.',
     publicationStatus: 'published',
-    imageUrl: adireIndigoImg,
+    craftKey: 'adire',
+    photo: 'adire',
     sessions: [
       {
         id: 'sess_adire_01',
@@ -504,7 +494,8 @@ export const EXPERIENCES: CulturalExperience[] = [
     locationMeetingPoint: 'Balogun Studio, Admiralty Way, Lekki Phase 1, Lagos',
     cancellationPolicy: 'Full refund up to 24 hours in advance.',
     publicationStatus: 'published',
-    imageUrl: beadmakingImg,
+    craftKey: 'ileke',
+    photo: 'beads',
     sessions: [
       {
         id: 'sess_ileke_01',
@@ -551,7 +542,8 @@ export const EXPERIENCES: CulturalExperience[] = [
     locationMeetingPoint: 'Bello Pottery Atelier, Ogunlana Drive, Surulere, Lagos',
     cancellationPolicy: 'Refunds permitted up to 48 hours prior to workshop.',
     publicationStatus: 'published',
-    imageUrl: potteryStudioImg,
+    craftKey: 'terracotta',
+    photo: 'pottery',
     sessions: [
       {
         id: 'sess_pot_01',
@@ -598,7 +590,7 @@ export const EXPERIENCES: CulturalExperience[] = [
     locationMeetingPoint: 'Maryland Foundry Studios, Anthony Village corridor, Lagos',
     cancellationPolicy: 'Strict 72-hour cancellation notice required due to furnace pre-firing logistics.',
     publicationStatus: 'published',
-    imageUrl: heroCraftsImg,
+    craftKey: 'bronze',
     sessions: [
       {
         id: 'sess_brz_01',
@@ -620,7 +612,7 @@ export const MOCK_QNA_RESPONSES: Record<string, QnAResponse> = {
     groundedRecordSlugs: ['adire-eleko-indigo'],
     associatedArtisanIds: ['art_bisi_folorunsho'],
     uncertaintyOrDisputeNotes: 'While historical documentation confirms Abeokuta as the premier 19th-century center of Adire Eleko, regional variants in Osogbo and Ibadan employ distinct leaf varieties with varying mordant preparations.',
-    confidence: 'high'
+    confidence: 'partial_evidence'
   },
   'aso-oke-looms': {
     id: 'qna_aso_oke_looms',
@@ -629,7 +621,7 @@ export const MOCK_QNA_RESPONSES: Record<string, QnAResponse> = {
     groundedRecordSlugs: ['aso-oke-weaving'],
     associatedArtisanIds: ['art_babatunde_adeyemi'],
     uncertaintyOrDisputeNotes: 'Historically gendered divisions of labor regarding loom types have become fluid in contemporary urban Lagos and Osun workshops, where both male and female weavers operate narrow treadle looms.',
-    confidence: 'high'
+    confidence: 'partial_evidence'
   },
   'benin-bronze-casting': {
     id: 'qna_benin_bronze_casting',
@@ -638,7 +630,7 @@ export const MOCK_QNA_RESPONSES: Record<string, QnAResponse> = {
     groundedRecordSlugs: ['benin-bronze-lost-wax'],
     associatedArtisanIds: ['art_chidiebere_okafor'],
     uncertaintyOrDisputeNotes: 'Scholarly analyses indicate the metallurgical composition of Benin castings shifted from high-tin bronze to imported brass manillas from European trade in the late 15th century, but the indigenous casting methodology predates European arrivals.',
-    confidence: 'high'
+    confidence: 'partial_evidence'
   },
   'ileke-beads': {
     id: 'qna_ileke_beads',
@@ -647,6 +639,6 @@ export const MOCK_QNA_RESPONSES: Record<string, QnAResponse> = {
     groundedRecordSlugs: ['ileke-beadwork'],
     associatedArtisanIds: ['art_kemi_balogun'],
     uncertaintyOrDisputeNotes: 'Bead varieties from trans-Saharan caravan exchanges and European trade were incorporated alongside indigenous Ile-Ife dichroic glass beads from the 12th century onwards.',
-    confidence: 'high'
+    confidence: 'partial_evidence'
   }
 };

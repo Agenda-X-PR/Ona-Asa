@@ -1,6 +1,6 @@
-import React from 'react';
-import { RouterProvider, useRouter } from './context/RouterContext';
-import { Navbar } from './components/layout/Navbar';
+import React, { useEffect, useRef } from 'react';
+import { Link, RouterProvider, useRouter } from './lib/router';
+import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/HomePage';
 import { DiscoverPage } from './pages/DiscoverPage';
@@ -14,84 +14,73 @@ import { ContributePage } from './pages/ContributePage';
 import { AboutPage } from './pages/AboutPage';
 import { BookingsPage } from './pages/BookingsPage';
 
-const AppContent: React.FC = () => {
-  const { currentPath } = useRouter();
+function pageFor(path: string): React.ReactElement {
+  if (path === '/') return <HomePage />;
+  if (path === '/discover') return <DiscoverPage />;
+  if (path.startsWith('/culture/')) return <CultureDetailPage />;
+  if (path === '/artisans') return <ArtisansPage />;
+  if (path.startsWith('/artisans/')) return <ArtisanDetailPage />;
+  if (path === '/experiences') return <ExperiencesPage />;
+  if (path.startsWith('/experiences/')) return <ExperienceDetailPage />;
+  if (path === '/ask') return <AskCultureLensPage />;
+  if (path === '/contribute') return <ContributePage />;
+  if (path === '/about') return <AboutPage />;
+  if (path === '/bookings') return <BookingsPage />;
+  return <NotFound />;
+}
 
-  const renderActiveRoute = () => {
-    if (currentPath === '/') {
-      return <HomePage />;
-    }
-    if (currentPath === '/discover') {
-      return <DiscoverPage />;
-    }
-    if (currentPath.startsWith('/culture/')) {
-      return <CultureDetailPage />;
-    }
-    if (currentPath === '/artisans') {
-      return <ArtisansPage />;
-    }
-    if (currentPath.startsWith('/artisans/')) {
-      return <ArtisanDetailPage />;
-    }
-    if (currentPath === '/experiences') {
-      return <ExperiencesPage />;
-    }
-    if (currentPath.startsWith('/experiences/')) {
-      return <ExperienceDetailPage />;
-    }
-    if (currentPath === '/ask') {
-      return <AskCultureLensPage />;
-    }
-    if (currentPath === '/contribute') {
-      return <ContributePage />;
-    }
-    if (currentPath === '/about') {
-      return <AboutPage />;
-    }
-    if (currentPath === '/bookings') {
-      return <BookingsPage />;
-    }
+const NotFound: React.FC = () => (
+  <section className="page py-20">
+    <h1 className="text-[clamp(2.5rem,6vw,4.5rem)]">This page is not here</h1>
+    <p className="measure mt-4 text-ink-soft">The address may be mistyped, or the prototype does not include this page.</p>
+    <Link to="/" className="btn btn-primary mt-6">
+      Go to the home page
+    </Link>
+  </section>
+);
 
-    return (
-      <section className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4" aria-labelledby="not-found-title">
-        <p className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">404 · PAGE NOT FOUND</p>
-        <h1 id="not-found-title" className="font-serif text-3xl text-[#34205B]">This page is not available</h1>
-        <p className="text-sm text-stone-600">The address may be incorrect, or this prototype does not include that route.</p>
-        <button onClick={() => window.location.hash = '#/'} className="px-4 py-2 text-sm font-medium text-white bg-[#34205B] rounded-md">
-          Return to CultureLens
-        </button>
-      </section>
-    );
-  };
+export const AppContent: React.FC = () => {
+  const { path } = useRouter();
+  const main = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+
+  // On a new page (not a filter change): back to the top, and move focus so
+  // screen reader and keyboard users start at the new content.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0 });
+    main.current?.focus({ preventScroll: true });
+  }, [path]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4EFE5] text-[#241F2B]">
-      {/* Top Banner Notice (Operational boundary for judges & reviewers) */}
-      <aside aria-label="Development announcement" className="bg-[#34205B] text-[#D7C8B3] text-xs py-2 px-4 border-b border-[#251642]">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] font-sans">
-          <div className="flex items-center gap-2">
-            <span className="font-mono uppercase font-semibold text-white">Ọ̀NÀ ÀṢÀ</span>
-            <span>·</span>
-            <span>Hack for Humanity Lagos 2026</span>
-            <span>·</span>
-            <span className="hidden md:inline">Frontend Lead: Member B</span>
-          </div>
-          <div className="flex items-center gap-3 text-stone-300">
-            <span className="text-center">Prototype demo · sample fixtures · no live services</span>
-            <span>·</span>
-            <a href="#/about" className="text-white hover:text-[#8A68C7] underline cursor-pointer">
-              Architecture & Team Split
-            </a>
-          </div>
-        </div>
-      </aside>
-
-      <Navbar />
-
-      <main className="flex-1">
-        {renderActiveRoute()}
+    <div className="flex min-h-screen flex-col">
+      <a
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault();
+          main.current?.focus();
+        }}
+        className="sr-only z-50 bg-face px-4 py-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+      >
+        Skip to content
+      </a>
+      <p className="bg-ground-deep text-[0.875rem] text-ink-soft">
+        <span className="page block py-1.5">
+          Prototype for Hack for Humanity Lagos 2026. All content is sample data and nothing you enter leaves this browser.{' '}
+          <Link to="/about" className="link">
+            How it is built
+          </Link>
+          <span className="hidden lg:inline">. Frontend lead: Member B.</span>
+        </span>
+      </p>
+      <Header />
+      {/* Keyed by path: moving between two records gives a fresh page with no state carried over. */}
+      <main id="main" ref={main} tabIndex={-1} className="flex-1 pb-24 outline-none">
+        <React.Fragment key={path}>{pageFor(path)}</React.Fragment>
       </main>
-
       <Footer />
     </div>
   );

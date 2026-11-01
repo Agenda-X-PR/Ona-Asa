@@ -1,498 +1,266 @@
 import React, { useState } from 'react';
-import { useRouter } from '../context/RouterContext';
-import { CULTURAL_RECORDS, ARTISANS, EXPERIENCES } from '../data/mockData';
-import { CulturalStatusLabel, ArtisanVerificationLabel } from '../components/common/StatusIndicators';
-import heroImg from '../assets/images/hero_nigerian_crafts_1791632798829.jpg';
-import { 
-  Search, 
-  ArrowRight, 
-  Compass, 
-  BookOpen, 
-  Users, 
-  Calendar, 
-  ShieldCheck, 
-  Sparkles,
-  MapPin,
-  Clock,
-  ArrowUpRight
-} from 'lucide-react';
+import { ArrowRight, Search } from 'lucide-react';
+import { Link, useRouter } from '../lib/router';
+import { ARTISANS, CULTURAL_RECORDS, EXPERIENCES } from '../data/mockData';
+import { CRAFT_NAMES, Motif } from '../components/Motif';
+import { Monogram, StatusMark, formatNaira } from '../components/ui';
+import { PHOTOS } from '../data/images';
+
+const heroPhoto = PHOTOS.adire;
+
+
+const TOPICS = ['Aṣọ-Òkè weaving', 'Adire indigo', 'Ìlẹ̀kẹ̀ beads', 'Terracotta pottery', 'Lost-wax bronze', 'Uli'];
 
 export const HomePage: React.FC = () => {
-  const { navigate, setSearchQuery } = useRouter();
-  const [localSearch, setLocalSearch] = useState('');
+  const { navigate } = useRouter();
+  const [query, setQuery] = useState('');
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (localSearch.trim()) {
-      setSearchQuery(localSearch.trim());
-      navigate('/discover');
-    } else {
-      navigate('/discover');
-    }
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const q = query.trim();
+    navigate(q ? `/discover?q=${encodeURIComponent(q)}` : '/discover');
   };
 
-  const handleQuickTopic = (topic: string) => {
-    setSearchQuery(topic);
-    navigate('/discover');
-  };
-
-  // Curated slice of records
-  const featuredStories = CULTURAL_RECORDS.slice(0, 3);
-  const featuredArtisans = ARTISANS.slice(0, 3);
-  const featuredExperiences = EXPERIENCES.slice(0, 2);
+  const makers = ARTISANS.slice(0, 3);
+  const workshops = EXPERIENCES.slice(0, 3);
 
   return (
-    <div className="space-y-20 lg:space-y-28 pb-20">
-      
-      {/* 1. Hero Section: Editorial Split with Full 1440px Balance */}
-      <section className="relative pt-6 sm:pt-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
-            
-            {/* Left Column: Editorial Headline & Search */}
-            <div className="lg:col-span-7 flex flex-col justify-center space-y-6 lg:pr-4">
-              <div className="space-y-2">
-                <div className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-                  LAGOS · SOUTHWEST CORRIDOR · CULTURAL KNOWLEDGE PLATFORM
-                </div>
-                <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#34205B] font-medium tracking-tight leading-[1.12] text-balance">
-                  Every tradition holds a story.
-                </h1>
-              </div>
-
-              <p className="text-base sm:text-lg text-[#241F2B]/85 font-sans leading-relaxed max-w-2xl">
-                Explore illustrative Nigerian cultural-record and artisan-profile prototypes. Sample text, images, identities, historical claims, and citations are not independently verified.
-              </p>
-
-              {/* Cultural Search Bar */}
-              <form onSubmit={handleSearchSubmit} className="pt-2">
-                <div className="relative flex items-center shadow-sm border border-[#D7C8B3] rounded-lg bg-white overflow-hidden focus-within:ring-2 focus-within:ring-[#34205B] focus-within:border-transparent transition-all">
-                  <div className="pl-4 text-[#8A68C7]">
-                    <Search className="w-5 h-5" />
-                  </div>
-                  <input
-                    type="text"
-                    value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
-                    placeholder="Search by craft, community, tradition, or city (e.g. Aso-Òkè, Adire, Benin)..."
-                    className="w-full py-4 pl-3 pr-28 text-sm sm:text-base text-[#241F2B] placeholder:text-stone-400 focus:outline-none"
-                    aria-label="Cultural discovery search"
-                  />
-                  <div className="absolute right-2">
-                    <button
-                      type="submit"
-                      className="px-4 py-2.5 text-xs sm:text-sm font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer"
-                    >
-                      Search
-                    </button>
-                  </div>
-                </div>
-
-                {/* Quick Topic Prompts */}
-                <div className="flex flex-wrap items-center gap-2 pt-3 text-xs text-[#241F2B]/70">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-stone-500">Explore topics:</span>
-                  {['Aso-Òkè Weaving', 'Adire Eleko Indigo', 'Royal Ileke Beads', 'Terracotta Pottery', 'Lost-Wax Bronze'].map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => handleQuickTopic(t)}
-                      className="hover:text-[#34205B] hover:underline cursor-pointer transition-colors"
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </form>
-
-              {/* Dual Primary CTAs */}
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <button
-                  onClick={() => navigate('/discover')}
-                  className="px-6 py-3 text-sm font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-all flex items-center gap-2 shadow-sm cursor-pointer"
-                >
-                  <span>Explore culture</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => navigate('/artisans')}
-                  className="px-6 py-3 text-sm font-medium text-[#34205B] bg-[#D7C8B3]/40 hover:bg-[#D7C8B3]/70 border border-[#D7C8B3] rounded-md transition-all cursor-pointer"
-                >
-                  Meet the artisans
-                </button>
-              </div>
-
-              {/* Curatorial Provenance Trust Line */}
-              <div className="pt-2 flex items-center gap-3 text-xs text-stone-500 font-sans border-t border-[#D7C8B3]/40">
-                <ShieldCheck className="w-4 h-4 text-[#8A68C7] shrink-0" />
-                <span>Prototype fixtures only. Cultural claims, sources, consent, and profiles require independent community verification.</span>
-              </div>
-            </div>
-
-            {/* Right Column: High-Fidelity Hero Image Composition */}
-            <div className="lg:col-span-5 relative flex items-center justify-center">
-              <div className="relative w-full h-[400px] sm:h-[460px] lg:h-full min-h-[420px] rounded-xl overflow-hidden border border-[#D7C8B3]/80 shadow-md">
-                <img
-                  src={heroImg}
-                  alt="Illustrative sample image of a person working at a loom; identity, setting, and attribution are unverified"
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                {/* Measured Scrim for Typographic Legibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#241F2B]/90 via-[#241F2B]/20 to-transparent flex flex-col justify-end p-6 text-white">
-                  <div className="text-[11px] font-mono tracking-widest uppercase text-[#D7C8B3]">
-                    ILLUSTRATIVE SAMPLE · NOT A FIELD RECORD
-                  </div>
-                  <h3 className="font-serif text-xl sm:text-2xl font-medium mt-1">
-                    Sample Loom-Weaving Record
-                  </h3>
-                  <p className="text-xs text-[#D7C8B3] mt-1 line-clamp-2">
-                    Sample descriptive text only. No location, date, lineage, or practitioner attribution is verified.
-                  </p>
-                  <div className="mt-3 flex items-center justify-between text-xs font-mono text-[#D7C8B3]/80 border-t border-white/20 pt-2">
-                    <span>SOURCE FIELD: SAMPLE / UNVERIFIED</span>
-                    <button
-                      onClick={() => navigate('/culture/aso-oke-weaving')}
-                      className="text-white hover:text-[#D7C8B3] inline-flex items-center gap-1 font-sans text-xs underline cursor-pointer"
-                    >
-                      <span>Read Story</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Curatorial Loop: How CultureLens Works */}
-      <section className="bg-white/60 border-y border-[#D7C8B3]/60 py-14">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto space-y-2 mb-12">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              OUR CURATORIAL ARCHITECTURE
-            </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium">
-              The Living Knowledge Loop
-            </h2>
-            <p className="text-sm text-stone-600 leading-relaxed">
-              This prototype demonstrates how cultural records, artisan experiences, and community contributions could be connected after review and consent.
+    <>
+      <section className="relative isolate overflow-hidden bg-frame text-frame-ink" aria-labelledby="hero-title">
+        <img
+          src={heroPhoto.large}
+          srcSet={`${heroPhoto.small} 640w, ${heroPhoto.large} 1200w`}
+          sizes="100vw"
+          width={heroPhoto.width}
+          height={heroPhoto.height}
+          alt=""
+          fetchPriority="high"
+          className="hero-photo absolute inset-0 -z-10 h-full w-full object-cover object-[72%_20%] md:object-[60%_35%]"
+        />
+        {/* Darken the photo where the text sits so it stays readable. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 bg-[linear-gradient(to_top,rgb(20_15_10/0.92)_0%,rgb(20_15_10/0.7)_45%,rgb(20_15_10/0.15)_100%)] md:bg-[linear-gradient(to_right,rgb(20_15_10/0.9)_0%,rgb(20_15_10/0.72)_42%,rgb(20_15_10/0.05)_75%)]"
+        />
+        <div className="page flex min-h-[min(46rem,88svh)] flex-col justify-end pt-40 pb-10 md:justify-center md:py-24">
+          <div className="hero-copy max-w-[34rem]">
+            <h1 id="hero-title" className="text-[clamp(3rem,7.5vw,5.75rem)] leading-[0.92] text-frame-ink">
+              Every tradition holds a story.
+            </h1>
+            <p className="mt-5 text-[1.125rem] leading-relaxed text-frame-ink/85">
+              Browse sample records of Nigerian crafts, the makers linked to them and the workshops they might teach. Everything here is
+              illustrative and has not been independently verified.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            {[
-              {
-                step: '01',
-                title: 'Discover',
-                desc: 'Explore crafts, traditions, names, and cultural practices across Nigerian regions.',
-                icon: Search,
-              },
-              {
-                step: '02',
-                title: 'Learn Context',
-                desc: 'Review sample narratives, source fields, and uncertainty indicators in the interface.',
-                icon: BookOpen,
-              },
-              {
-                step: '03',
-                title: 'Find Makers',
-                desc: 'Explore illustrative profile layouts; these fixtures do not verify real people or guilds.',
-                icon: Users,
-              },
-              {
-                step: '04',
-                title: 'Connect & Experience',
-                desc: 'Preview example workshop and booking screens; no real sessions can be reserved here.',
-                icon: Calendar,
-              },
-              {
-                step: '05',
-                title: 'Preserve & Contribute',
-                desc: 'Preview a local-only contribution form; submissions are not sent to reviewers.',
-                icon: Sparkles,
-              },
-            ].map((item) => (
-              <div 
-                key={item.step} 
-                className="bg-[#F4EFE5]/50 border border-[#D7C8B3]/60 rounded-lg p-5 flex flex-col justify-between space-y-4 hover:border-[#8A68C7]/60 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-[#8A68C7] font-semibold">{item.step}</span>
-                  <item.icon className="w-4 h-4 text-[#34205B]" />
-                </div>
-                <div>
-                  <h3 className="font-serif text-lg font-medium text-[#34205B]">{item.title}</h3>
-                  <p className="text-xs text-stone-600 mt-1.5 leading-relaxed">{item.desc}</p>
-                </div>
+            <form onSubmit={submit} role="search" className="mt-7">
+              <label htmlFor="home-search" className="field-label text-frame-ink">
+                Search the records
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="home-search"
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Craft, community or place"
+                  className="input border-transparent text-ink"
+                />
+                <button type="submit" className="btn shrink-0 border border-frame-accent bg-frame-accent font-semibold text-[#1a140c] hover:bg-frame-ink hover:border-frame-ink">
+                  <Search className="h-4 w-4" aria-hidden="true" />
+                  <span className="sr-only sm:not-sr-only">Search</span>
+                </button>
               </div>
-            ))}
+            </form>
+
+            <nav aria-label="Popular topics" className="mt-5">
+              <ul className="flex flex-wrap gap-2 text-[0.9375rem]">
+                {TOPICS.map((topic) => (
+                  <li key={topic}>
+                    <Link
+                      to="/discover"
+                      query={{ q: topic }}
+                      className="inline-block rounded-[3px] border border-frame-ink/30 px-3 py-1.5 text-frame-ink no-underline transition-colors hover:border-frame-accent hover:text-frame-accent"
+                    >
+                      {topic}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
       </section>
 
-      {/* 3. Featured Cultural Stories: Editorial Asymmetric Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <section className="page mt-20" aria-labelledby="records-title">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
           <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              SAMPLE CULTURAL RECORDS
-            </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium mt-1">
-              Curated Cultural Records
+            <h2 id="records-title" className="text-[clamp(2.25rem,4.5vw,3.5rem)]">
+              Six crafts, six records
             </h2>
-            <p className="text-sm text-stone-600 mt-1 max-w-xl">
-              Illustrative content shows the proposed record format. Citations and cultural claims have not been independently verified.
+            <p className="measure mt-3 text-ink-soft">
+              Each record tells a craft's story, where it comes from and how it is made. The sources have not been checked yet.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/discover')}
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#34205B] hover:text-[#8A68C7] transition-colors cursor-pointer self-start md:self-auto"
-          >
-            <span>Browse all records</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <Link to="/discover" className="link inline-flex items-center gap-1.5">
+            Search all records <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {featuredStories.map((story) => (
-            <article key={story.id} className="group bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7]/50 transition-all flex flex-col">
-              <a href={`#/culture/${story.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/culture/${story.slug}`); }} aria-label={`Read sample record: ${story.title}`} className="flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#34205B]">
-              <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
-                <img
-                  src={story.imageUrl}
-                  alt={story.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-
-              <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-2">
-                  {/* Clean unboxed metadata with dot separators */}
-                  <div className="flex items-center gap-2 text-xs text-stone-500 font-sans">
-                    <span>{story.category}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{story.region.split('(')[0].trim()}</span>
-                  </div>
-
-                  <h3 className="font-serif text-xl font-medium text-[#34205B] group-hover:text-[#8A68C7] transition-colors leading-snug">
-                    {story.title}
-                  </h3>
-
-                  <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                    {story.shortDescription}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-[#D7C8B3]/40 flex items-center justify-between text-xs">
-                  <CulturalStatusLabel status={story.status} />
-                  <span className="text-[#34205B] font-medium group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                    Explore <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-              </a>
-            </article>
-          ))}
-        </div>
+        <ul className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {CULTURAL_RECORDS.map((record) => {
+            const photo = record.photo ? PHOTOS[record.photo] : undefined;
+            const [name, subtitle] = record.title.split(/:\s*/);
+            return (
+              <li key={record.id}>
+                <Link to={`/culture/${record.slug}`} className="group block no-underline">
+                  <article>
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] bg-ground-deep">
+                      {photo ? (
+                        <img
+                          src={photo.small}
+                          width={photo.width}
+                          height={photo.height}
+                          alt={photo.alt}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <div className="motif-field h-full w-full bg-ground-deep">
+                          <Motif craft={record.craftKey} scale={1.3} />
+                        </div>
+                      )}
+                      <span className="absolute bottom-3 left-3 rounded-[2px] bg-frame/85 px-2 py-1 text-[0.8125rem] text-frame-ink">
+                        {CRAFT_NAMES[record.craftKey]}
+                      </span>
+                    </div>
+                    <h3 className="mt-4 text-[1.9rem] leading-none group-hover:underline group-hover:decoration-2 group-hover:underline-offset-4">
+                      {name}
+                    </h3>
+                    {subtitle && <p className="mt-1.5 font-semibold leading-snug">{subtitle}</p>}
+                    <p className="mt-2 line-clamp-2 text-[0.9375rem] text-ink-soft">{record.shortDescription}</p>
+                    <div className="mt-3">
+                      <StatusMark status={record.status} />
+                    </div>
+                  </article>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
-      {/* 4. Featured Artisans: The Custodians of Heritage */}
-      <section className="bg-[#34205B] text-[#F4EFE5] py-16 sm:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+      <section className="mt-24 border-y border-rule bg-face/60 py-16" aria-labelledby="makers-title">
+        <div className="page">
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
             <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-[#D7C8B3]">
-                HERITAGE PRACTITIONERS
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl font-medium mt-1 text-white">
-                Illustrative Artisan Profiles
+              <h2 id="makers-title" className="text-[clamp(2.25rem,4.5vw,3.5rem)]">
+                In the makers' words
               </h2>
-              <p className="text-sm text-[#D7C8B3]/80 mt-1 max-w-xl">
-                These are prototype fixtures, not confirmed identities, consent records, availability, or endorsements.
+              <p className="measure mt-3 text-ink-soft">
+                Sample profiles and sample quotes. They are not confirmed people and record no consent or endorsement.
               </p>
             </div>
-            <button
-              onClick={() => navigate('/artisans')}
-              className="inline-flex items-center gap-2 text-sm font-medium text-white hover:text-[#D7C8B3] transition-colors cursor-pointer self-start md:self-auto"
-            >
-              <span>View all artisans</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <Link to="/artisans" className="link inline-flex items-center gap-1.5">
+              Meet all five makers <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredArtisans.map((artisan) => (
-              <a
-                key={artisan.id}
-                href={`#/artisans/${artisan.slug}`}
-                onClick={(event) => { event.preventDefault(); navigate(`/artisans/${artisan.slug}`); }}
-                aria-label={`Open illustrative profile: ${artisan.displayName}`}
-                className="group bg-[#241F2B] rounded-xl border border-[#D7C8B3]/20 overflow-hidden hover:border-[#8A68C7] transition-all flex flex-col justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D7C8B3]"
-              >
-                <div className="p-6 space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-[#8A68C7]/50 shrink-0">
-                      <img
-                        src={artisan.avatarUrl}
-                        alt={artisan.displayName}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-serif text-lg font-medium text-white group-hover:text-[#8A68C7] transition-colors">
-                        {artisan.displayName}
-                      </h3>
-                      <p className="text-xs text-[#8A68C7] font-medium">{artisan.craft}</p>
-                      <div className="flex items-center gap-1.5 text-[11px] text-[#D7C8B3]/70 mt-1">
-                        <MapPin className="w-3 h-3 text-[#8A68C7]" />
-                        <span>{artisan.publicLocation}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Curatorial Quote */}
-                  <blockquote className="text-xs italic text-[#D7C8B3]/85 leading-relaxed border-l border-[#8A68C7]/50 pl-3 my-2">
-                    "{artisan.quote}"
+          <ul className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-10 md:grid-cols-3 md:gap-0 md:divide-x md:divide-rule">
+            {makers.map((artisan) => (
+              <li key={artisan.id} className="md:px-8 md:first:pl-0 md:last:pr-0">
+                <Link to={`/artisans/${artisan.slug}`} className="group flex h-full flex-col no-underline">
+                  <blockquote className="display flex-1 text-[clamp(1.5rem,2.4vw,1.9rem)] leading-[1.08] font-[650]">
+                    <span aria-hidden="true" className="mb-1 block text-[3rem] leading-[0.6] text-brass">“</span>
+                    {artisan.quote}
                   </blockquote>
-
-                  <p className="text-xs text-[#D7C8B3]/75 line-clamp-2">
-                    {artisan.bio}
-                  </p>
-                </div>
-
-                <div className="px-6 py-4 bg-[#2b2433] border-t border-[#D7C8B3]/10 flex items-center justify-between text-xs">
-                  <span className="font-mono text-[#D7C8B3]/70">
-                    {artisan.experienceYears} Years Practice
-                  </span>
-                  <span className="text-[#8A68C7] group-hover:text-white transition-colors inline-flex items-center gap-1">
-                    View Profile <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </a>
+                  <div className="mt-6 flex items-center gap-4 border-t border-rule pt-4">
+                    <Monogram name={artisan.displayName} craft={artisan.craftKey} />
+                    <div>
+                      <p className="display text-[1.4rem] group-hover:underline">{artisan.displayName}</p>
+                      <p className="text-[0.875rem] leading-snug text-ink-soft">{artisan.craft}</p>
+                    </div>
+                  </div>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
-      {/* 5. Artisan-Led Experiences: Practical Engagement */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+      <section className="page mt-24" aria-labelledby="workshops-title">
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
           <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              PRACTICAL ENGAGEMENT · WORKSHOPS
-            </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium mt-1">
-              Immersive Cultural Experiences
+            <h2 id="workshops-title" className="text-[clamp(2.25rem,4.5vw,3.5rem)]">
+              Learn it with your hands
             </h2>
-            <p className="text-sm text-stone-600 mt-1 max-w-xl">
-              Preview sample workshop descriptions and booking UI. No real sessions, payments, or artisan arrangements are active in this prototype.
+            <p className="measure mt-3 text-ink-soft">
+              Sample workshops with a booking flow you can try. Requests stay in this browser; no seat is held and nothing is paid.
             </p>
           </div>
-          <button
-            onClick={() => navigate('/experiences')}
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#34205B] hover:text-[#8A68C7] transition-colors cursor-pointer self-start md:self-auto"
-          >
-            <span>See all experiences</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <Link to="/experiences" className="link inline-flex items-center gap-1.5">
+            All workshops <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {featuredExperiences.map((exp) => (
-            <div 
-              key={exp.id}
-              className="group bg-white rounded-xl border border-[#D7C8B3]/70 overflow-hidden hover:shadow-md hover:border-[#8A68C7]/50 transition-all flex flex-col sm:flex-row"
-            >
-              <div className="sm:w-2/5 relative aspect-square sm:aspect-auto overflow-hidden bg-stone-100">
-                <img
-                  src={exp.imageUrl}
-                  alt={exp.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-
-              <div className="sm:w-3/5 p-6 flex flex-col justify-between space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-stone-500 font-sans">
-                    <span>{exp.category}</span>
-                    <span aria-hidden="true">·</span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-[#8A68C7]" />
-                      {exp.durationHours} Hours
-                    </span>
+        <ul className="mt-8 divide-y divide-rule border-y border-rule">
+          {workshops.map((exp) => {
+            const photo = exp.photo ? PHOTOS[exp.photo] : undefined;
+            const artisan = ARTISANS.find((a) => a.id === exp.artisanId);
+            return (
+              <li key={exp.id}>
+                <Link
+                  to={`/experiences/${exp.slug}`}
+                  className="group grid grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-5 gap-y-3 py-6 no-underline sm:grid-cols-[11rem_minmax(0,1fr)_auto] sm:gap-x-8"
+                >
+                  <div className="aspect-[4/3] overflow-hidden rounded-[3px] bg-ground-deep">
+                    {photo ? (
+                      <img src={photo.small} width={photo.width} height={photo.height} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="motif-field h-full w-full bg-ground-deep"><Motif craft={exp.craftKey} /></div>
+                    )}
                   </div>
-
-                  <h3 className="font-serif text-lg font-medium text-[#34205B] group-hover:text-[#8A68C7] transition-colors leading-snug">
-                    <a href={`#/experiences/${exp.slug}`} onClick={(event) => { event.preventDefault(); navigate(`/experiences/${exp.slug}`); }} className="focus-visible:outline-none focus-visible:underline">{exp.title}</a>
-                  </h3>
-
-                  <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                    {exp.shortSummary}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-[#D7C8B3]/40 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-stone-500 block">Sample price per guest · not an offer</span>
-                    <span className="font-mono text-base font-semibold text-[#34205B] tabular-nums">
-                      ₦{exp.priceNaira.toLocaleString()}
-                    </span>
+                    <h3 className="text-[clamp(1.4rem,2.4vw,1.85rem)] leading-[1.02] group-hover:underline">{exp.title}</h3>
+                    <p className="mt-2 hidden text-ink-soft sm:block">{exp.shortSummary}</p>
+                    <p className="mt-2 text-[0.875rem] text-ink-soft">
+                      {exp.durationHours} hours{artisan ? ` with ${artisan.displayName}` : ''}
+                    </p>
                   </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/experiences/${exp.slug}`);
-                    }}
-                    className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer"
-                  >
-                    Preview booking demo
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  <p className="col-start-2 sm:col-start-3 sm:text-right">
+                    <span className="display block text-[1.9rem] leading-none tnum">{formatNaira(exp.priceNaira)}</span>
+                    <span className="text-[0.875rem] text-ink-soft">a guest, sample price</span>
+                  </p>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
-      {/* 6. Ask CultureLens Preview: Local Sample Responses */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-[#F4EFE5] border-2 border-[#D7C8B3] rounded-2xl p-8 sm:p-12 relative overflow-hidden">
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              <Sparkles className="w-4 h-4" />
-              <span>Sample Q&A · Future backend integration</span>
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#34205B] font-medium leading-tight">
-              Have questions about Nigerian customs, loom mechanics, or craft symbols?
-            </h2>
-            <p className="text-sm sm:text-base text-stone-700 leading-relaxed">
-              This prototype returns canned keyword-matched sample answers, not Gemma or live retrieval. The answer content and citations require review before real-world use.
+      <section className="-mb-24 mt-24 border-b border-white/10 bg-frame text-frame-ink" aria-label="Ask and contribute">
+        <div className="page grid grid-cols-[minmax(0,1fr)] gap-12 py-16 md:grid-cols-2 md:gap-16">
+          <div>
+            <h2 className="text-[clamp(2rem,4vw,3rem)] text-frame-ink">Have a question?</h2>
+            <p className="mt-3 max-w-[46ch] text-frame-soft">
+              Ask about indigo, looms, bronze casting or beads. You get the closest of four sample answers with its related records. No AI
+              model is involved yet.
             </p>
-            <div className="pt-4 flex flex-wrap items-center gap-4">
-              <button
-                onClick={() => navigate('/ask')}
-                className="px-6 py-3 text-sm font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
-              >
-                <span>Ask CultureLens</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => navigate('/contribute')}
-                className="px-6 py-3 text-sm font-medium text-[#34205B] bg-white hover:bg-stone-50 border border-[#D7C8B3] rounded-md transition-colors cursor-pointer"
-              >
-                Contribute Cultural Knowledge
-              </button>
-            </div>
+            <Link to="/ask" className="btn mt-6 border border-frame-accent bg-frame-accent text-[#1a140c] hover:border-frame-ink hover:bg-frame-ink">
+              Ask CultureLens
+            </Link>
+          </div>
+          <div className="md:border-l md:border-white/15 md:pl-16">
+            <h2 className="text-[clamp(2rem,4vw,3rem)] text-frame-ink">Know a story?</h2>
+            <p className="mt-3 max-w-[46ch] text-frame-soft">
+              Add a story, a technique or a correction. For now entries are saved in your browser only and are not sent for review.
+            </p>
+            <Link to="/contribute" className="btn mt-6 border border-frame-ink/40 text-frame-ink hover:border-frame-ink">
+              Open the contribution form
+            </Link>
           </div>
         </div>
       </section>
-
-    </div>
+    </>
   );
 };

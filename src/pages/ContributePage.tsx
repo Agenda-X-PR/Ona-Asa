@@ -1,23 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from '../context/RouterContext';
+import React, { useEffect, useState } from 'react';
 import { apiService } from '../services/apiService';
-import { ContributionSubmission, ContributionType, SensitivityLevel } from '../types';
-import { 
-  HeartHandshake, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Clock, 
-  Send, 
-  BookOpen, 
-  AlertCircle,
-  FileText,
-  Lock
-} from 'lucide-react';
+import type { ContributionSubmission, ContributionType, SensitivityLevel } from '../types';
+import { PageIntro } from '../components/ui';
+
+type Attribution = ContributionSubmission['attributionPreference'];
+
+const TYPES: { id: ContributionType; label: string }[] = [
+  { id: 'cultural_story', label: 'A story or history' },
+  { id: 'craft_technique', label: 'A craft technique' },
+  { id: 'oral_history', label: 'An elder’s oral account' },
+  { id: 'correction', label: 'A correction to a record' },
+  { id: 'photo_archive', label: 'Photo documentation' },
+];
+
+const SENSITIVITY: { level: SensitivityLevel; label: string; desc: string }[] = [
+  { level: 'public', label: 'Public', desc: 'Public sample text only. It is not verified or published.' },
+  { level: 'community_restricted', label: 'Community restricted', desc: 'Would need permission and access controls. Not accepted here.' },
+  { level: 'sacred', label: 'Sacred or closed', desc: 'Not accepted by this prototype. Do not enter it.' },
+];
+
+const ATTRIBUTION: { id: Attribution; label: string }[] = [
+  { id: 'public', label: 'Show a name' },
+  { id: 'pseudonymous', label: 'Show initials only' },
+  { id: 'anonymous', label: 'Show no name' },
+];
+
+type FieldErrors = Partial<Record<'title' | 'description' | 'community' | 'sources' | 'email' | 'consent' | 'sensitivity', string>>;
 
 export const ContributePage: React.FC = () => {
-  const { navigate } = useRouter();
-
-  // Form State
   const [type, setType] = useState<ContributionType>('cultural_story');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -25,438 +35,235 @@ export const ContributePage: React.FC = () => {
   const [region, setRegion] = useState('');
   const [language, setLanguage] = useState('');
   const [sources, setSources] = useState('');
-  const [attributionPreference, setAttributionPreference] = useState<'public' | 'pseudonymous' | 'anonymous'>('public');
-  const [contributorName, setContributorName] = useState('');
-  const [contributorEmail, setContributorEmail] = useState('');
-  const [sensitivityLevel, setSensitivityLevel] = useState<SensitivityLevel>('public');
-  const [consentGiven, setConsentGiven] = useState(false);
+  const [attribution, setAttribution] = useState<Attribution>('public');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [sensitivity, setSensitivity] = useState<SensitivityLevel>('public');
+  const [consent, setConsent] = useState(false);
 
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState(false);
-  const [confirmedSubmission, setConfirmedSubmission] = useState<ContributionSubmission | null>(null);
-
-  // Queue of recent contributions
-  const [recentContributions, setRecentContributions] = useState<ContributionSubmission[]>([]);
+  const [saved, setSaved] = useState<ContributionSubmission | null>(null);
+  const [recent, setRecent] = useState<ContributionSubmission[]>([]);
 
   useEffect(() => {
-    apiService.getRecentContributions()
-      .then((items) => setRecentContributions(items.filter((item) => item.sensitivityLevel === 'public')))
-      .catch(() => setLoadError(true));
-  }, [confirmedSubmission]);
+    apiService.getRecentContributions().then((items) => setRecent(items.filter((i) => i.sensitivityLevel === 'public'))).catch(() => setRecent([]));
+  }, [saved]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
+  const validate = (): FieldErrors => {
+    const next: FieldErrors = {};
+    if (!title.trim()) next.title = 'Give the contribution a title.';
+    if (description.trim().length < 30) next.description = 'Describe the context in at least 30 characters.';
+    if (!community.trim()) next.community = 'Name the community, lineage or guild it comes from.';
+    if (!sources.trim()) next.sources = 'Add a source, elder attribution or archive reference.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) next.email = 'Enter an email address such as demo@example.invalid.';
+    if (sensitivity !== 'public') next.sensitivity = 'Only public content can be saved here. Restricted and sacred knowledge must not be entered in this prototype.';
+    if (!consent) next.consent = 'Confirm the statement to save the demo entry.';
+    return next;
+  };
 
-    if (!title.trim()) {
-      setErrorMessage('Please provide a descriptive title for your contribution.');
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitError(null);
+    const found = validate();
+    setErrors(found);
+    const first = Object.keys(found)[0];
+    if (first) {
+      document.getElementById(`contrib-${first}`)?.focus();
       return;
     }
-    if (!description.trim() || description.length < 30) {
-      setErrorMessage('Please provide a detailed narrative (minimum 30 characters) explaining the cultural context.');
-      return;
-    }
-    if (!community.trim()) {
-      setErrorMessage('Please specify the originating community, lineage, or guild.');
-      return;
-    }
-    if (!sources.trim()) {
-      setErrorMessage('Please cite your sources, elder testimonies, or archival reference to uphold provenance standards.');
-      return;
-    }
-    if (!contributorEmail.trim() || !contributorEmail.includes('@')) {
-      setErrorMessage('Please provide a valid contact email for reviewer communication.');
-      return;
-    }
-    if (!consentGiven) {
-      setErrorMessage('You must confirm consent for cultural documentation and review.');
-      return;
-    }
-    if (sensitivityLevel !== 'public') {
-      setErrorMessage('This prototype cannot safely accept or store restricted, community-restricted, or sacred knowledge. Choose public sample content, or do not submit it here.');
-      return;
-    }
-
     setSubmitting(true);
     try {
-      const res = await apiService.submitContribution({
+      const result = await apiService.submitContribution({
         type,
         title: title.trim(),
         description: description.trim(),
         community: community.trim(),
-        region: region.trim() || 'Southwest Nigeria',
+        region: region.trim(),
         language: language.trim() || undefined,
         sources: sources.trim(),
-        attributionPreference,
-        contributorName: contributorName.trim() || undefined,
-        contributorEmail: contributorEmail.trim(),
-        consentGiven,
-        sensitivityLevel
+        attributionPreference: attribution,
+        contributorName: attribution === 'anonymous' ? undefined : name.trim() || undefined,
+        contributorEmail: email.trim(),
+        consentGiven: consent,
+        sensitivityLevel: sensitivity,
       });
-
-      if (res.success) {
-        setConfirmedSubmission(res.submission);
-        // Reset inputs
-        setTitle('');
-        setDescription('');
-        setCommunity('');
-        setRegion('');
-        setLanguage('');
-        setSources('');
-        setConsentGiven(false);
-      }
-    } catch {
-      setErrorMessage('An error occurred submitting your contribution. Please try again.');
+      setSaved(result.submission);
+      setTitle('');
+      setDescription('');
+      setCommunity('');
+      setRegion('');
+      setLanguage('');
+      setSources('');
+      setConsent(false);
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'The entry was not saved. Try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
+  const describedBy = (field: keyof FieldErrors, hint?: string) =>
+    [hint, errors[field] ? `contrib-${field}-error` : undefined].filter(Boolean).join(' ') || undefined;
+  const ErrorText: React.FC<{ field: keyof FieldErrors }> = ({ field }) =>
+    errors[field] ? <span id={`contrib-${field}-error`} className="mt-1 block text-[0.9375rem] text-alert">{errors[field]}</span> : null;
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12">
-      
-      {/* Header */}
-      <div className="space-y-3">
-        <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-          COMMUNITY KNOWLEDGE GOVERNANCE
-        </span>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#34205B] font-medium tracking-tight">
-          Contribute Cultural Knowledge
-        </h1>
-        <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-          This prototype saves sample submissions only in this browser. Nothing is sent to a team or reviewer. Do not enter real personal information or restricted, community-restricted, or sacred knowledge.
-        </p>
-      </div>
+    <div className="page max-w-4xl">
+      <PageIntro
+        title="Contribute"
+        lead="Try the form for proposing stories, techniques and corrections. Entries are saved in this browser only; nothing goes to a team or reviewer. Do not enter real personal information, or restricted or sacred knowledge."
+      />
 
-      {/* Confirmation Card if Just Submitted */}
-      {confirmedSubmission && (
-        <div className="p-6 bg-emerald-50 border-2 border-emerald-300 rounded-2xl space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h3 className="font-serif text-lg font-medium text-emerald-950">
-                Demo Contribution Saved in This Browser
-              </h3>
-              <p className="text-xs text-emerald-800 leading-relaxed">
-                This is a local demo receipt only. No reviewer has received this submission, no review is scheduled, and no email will be sent. The sample data remains in this browser until its local storage is cleared.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-3 bg-white rounded-lg border border-emerald-200 text-xs font-mono flex flex-wrap items-center justify-between gap-2">
-            <span>REFERENCE: {confirmedSubmission.reference}</span>
-            <span>STATUS: LOCAL DEMO ONLY</span>
-            <span>DATE: {new Date(confirmedSubmission.submittedAt).toLocaleDateString()}</span>
-          </div>
-
-          <button
-            onClick={() => setConfirmedSubmission(null)}
-            className="text-xs font-medium text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
-          >
-            Submit an additional record or correction →
-          </button>
-        </div>
+      {saved && (
+        <section role="status" aria-labelledby="saved-title" className="plaque nails rise mb-10 p-5 sm:p-7">
+          <h2 id="saved-title" className="text-[1.8rem]">Demo entry saved in this browser</h2>
+          <p className="mt-2 text-ink-soft">No reviewer received it and no email will be sent. It stays here until this browser's site data is cleared.</p>
+          <p className="display mt-3 text-[1.5rem] tracking-[0.03em] tnum">{saved.reference}</p>
+          <button type="button" onClick={() => setSaved(null)} className="btn btn-quiet mt-4">Write another entry</button>
+        </section>
       )}
 
-      {/* Main Form */}
-      <form onSubmit={handleSubmit} className="bg-white p-6 sm:p-10 rounded-2xl border-2 border-[#D7C8B3] shadow-sm space-y-8">
-        
-        {errorMessage && (
-          <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{errorMessage}</span>
-          </div>
+      <form onSubmit={submit} noValidate className="space-y-10">
+        {submitError && <p role="alert" className="notice notice-error">{submitError}</p>}
+        {Object.keys(errors).length > 0 && (
+          <p role="alert" className="notice notice-error">Some fields need attention. They are marked below.</p>
         )}
 
-        {/* 1. Contribution Type */}
-        <div className="space-y-3">
-          <label className="block text-xs font-mono uppercase tracking-wider text-stone-700">
-            1. CONTRIBUTION CATEGORY *
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            {[
-              { id: 'cultural_story', label: 'Cultural Story & History' },
-              { id: 'craft_technique', label: 'Craft Technique / Loom Spec' },
-              { id: 'oral_history', label: 'Elder Oral Testimony' },
-              { id: 'correction', label: 'Archival Correction' },
-              { id: 'photo_archive', label: 'Photographic Documentation' }
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setType(cat.id as ContributionType)}
-                className={`p-3 text-left rounded-lg border transition-all cursor-pointer ${
-                  type === cat.id
-                    ? 'bg-[#34205B] text-white border-[#34205B]'
-                    : 'bg-[#FAF7F2] text-stone-700 border-stone-200 hover:border-stone-400'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 2. Title & Description */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-stone-700 mb-1">
-              Title of Contribution *
-            </label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Traditional Etu Dyeing Techniques of the Oyo Weavers..."
-              className="w-full p-3 rounded-lg border border-[#D7C8B3] text-stone-900 text-sm focus:ring-2 focus:ring-[#34205B]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-stone-700 mb-1">
-              Detailed Narrative & Cultural Context *
-            </label>
-            <textarea
-              rows={5}
-              required
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Explain the background, materials, significance, and cultural lineage..."
-              className="w-full p-3 rounded-lg border border-[#D7C8B3] text-stone-900 text-sm focus:ring-2 focus:ring-[#34205B]"
-            />
-          </div>
-        </div>
-
-        {/* 3. Community Provenance Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-          <div>
-            <label className="block font-medium text-stone-700 mb-1">Originating Community *</label>
-            <input
-              type="text"
-              required
-              value={community}
-              onChange={(e) => setCommunity(e.target.value)}
-              placeholder="e.g. Iseyin Weavers Guild"
-              className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium text-stone-700 mb-1">Geographic Region</label>
-            <input
-              type="text"
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              placeholder="e.g. Oyo State / Southwest"
-              className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
-            />
-          </div>
-
-          <div>
-            <label className="block font-medium text-stone-700 mb-1">Indigenous Language / Dialect</label>
-            <input
-              type="text"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              placeholder="e.g. Yorùbá (Ọ̀yọ́ dialect)"
-              className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
-            />
-          </div>
-        </div>
-
-        {/* 4. Sources & Supporting Citations (Mandatory) */}
-        <div>
-          <label className="block text-xs font-medium text-stone-700 mb-1">
-            Supporting Sources or Elder Attribution *
-          </label>
-          <textarea
-            rows={3}
-            required
-            value={sources}
-            onChange={(e) => setSources(e.target.value)}
-            placeholder="Enter sample citation text for the interface demo; this form does not validate sources..."
-            className="w-full p-3 rounded-lg border border-[#D7C8B3] text-stone-900 text-xs focus:ring-2 focus:ring-[#34205B]"
-          />
-          <p className="text-[11px] text-stone-500 mt-1">
-            A source field is required to preview the form. This demo does not check citations, approve content, or publish to an archive.
-          </p>
-        </div>
-
-        {/* 5. Sensitivity Level */}
-        <div className="space-y-2">
-          <label className="block text-xs font-mono uppercase tracking-wider text-stone-700">
-            5. SENSITIVITY & ACCESS LEVEL *
-          </label>
-          <p className="text-xs text-amber-800">This prototype blocks saving anything except public-sensitivity demo content. It has no secure access controls.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-            {[
-              { level: 'public', label: 'Public Sample', desc: 'Public-sensitivity demo text only; not verified or published' },
-              { level: 'community_restricted', label: 'Community Restricted', desc: 'Would require permission and access controls; not accepted here' },
-              { level: 'sacred', label: 'Sacred / Closed Protocol', desc: 'Not accepted in this prototype; do not enter' }
-            ].map((s) => (
-              <label
-                key={s.level}
-                className={`p-3 rounded-lg border cursor-pointer flex flex-col justify-between ${
-                  sensitivityLevel === s.level
-                    ? 'bg-[#34205B]/5 border-[#34205B] ring-1 ring-[#34205B]'
-                    : 'bg-white border-stone-200'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="sensitivity"
-                    checked={sensitivityLevel === s.level}
-                    onChange={() => setSensitivityLevel(s.level as SensitivityLevel)}
-                    className="text-[#34205B]"
-                  />
-                  <span className="font-medium text-stone-900">{s.label}</span>
-                </div>
-                <p className="text-[11px] text-stone-500 mt-1">{s.desc}</p>
+        <fieldset>
+          <legend className="display text-[1.8rem]">What are you adding?</legend>
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2">
+            {TYPES.map((t) => (
+              <label key={t.id} className="choice">
+                <input type="radio" name="type" value={t.id} checked={type === t.id} onChange={() => setType(t.id)} />
+                <span>{t.label}</span>
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
-        {/* 6. Attribution Preferences & Contact */}
-        <div className="space-y-3 pt-4 border-t border-stone-200 text-xs">
-          <label className="block font-mono uppercase tracking-wider text-stone-700">
-            6. ATTRIBUTION & CONTACT
-          </label>
-
-          <div className="flex flex-wrap gap-4">
-            {[
-              { id: 'public', label: 'Show Sample Name in This Browser' },
-              { id: 'pseudonymous', label: 'Use Sample Initials' },
-              { id: 'anonymous', label: 'Hide Attribution in This Browser' }
-            ].map((opt) => (
-              <label key={opt.id} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="attribution"
-                  checked={attributionPreference === opt.id}
-                  onChange={() => setAttributionPreference(opt.id as 'public' | 'pseudonymous' | 'anonymous')}
-                  className="text-[#34205B]"
-                />
-                <span className="text-stone-800">{opt.label}</span>
-              </label>
-            ))}
+        <fieldset className="space-y-5">
+          <legend className="display text-[1.8rem]">The knowledge</legend>
+          <div>
+            <label htmlFor="contrib-title" className="field-label">Title</label>
+            <input id="contrib-title" value={title} onChange={(e) => setTitle(e.target.value)} aria-invalid={!!errors.title} aria-describedby={describedBy('title')} className="input" placeholder="For example, etu dyeing among Oyo weavers" />
+            <ErrorText field="title" />
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            {attributionPreference !== 'anonymous' && (
-              <div>
-                <label className="block text-stone-700 mb-1">Your Display Name</label>
-                <input
-                  type="text"
-                  value={contributorName}
-                  onChange={(e) => setContributorName(e.target.value)}
-                  placeholder="Sample Contributor"
-                  className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
-                />
-              </div>
-            )}
-
-            <div className={attributionPreference === 'anonymous' ? 'sm:col-span-2' : ''}>
-            <label className="block text-stone-700 mb-1">Demo Contact Email *</label>
-              <input
-                type="email"
-                required
-                value={contributorEmail}
-                onChange={(e) => setContributorEmail(e.target.value)}
-                placeholder="demo@example.invalid"
-                className="w-full p-2.5 rounded-lg border border-[#D7C8B3] text-stone-900 focus:ring-2 focus:ring-[#34205B]"
-              />
-              <span className="text-[10px] text-stone-500">
-                Use a placeholder address only. This prototype stores it in this browser and does not contact reviewers.
-              </span>
+          <div>
+            <label htmlFor="contrib-description" className="field-label">Context and meaning</label>
+            <textarea id="contrib-description" rows={6} value={description} onChange={(e) => setDescription(e.target.value)} aria-invalid={!!errors.description} aria-describedby={describedBy('description', 'contrib-description-hint')} className="input" />
+            <span id="contrib-description-hint" className="field-hint">Background, materials, significance and lineage. At least 30 characters.</span>
+            <ErrorText field="description" />
+          </div>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-3">
+            <div>
+              <label htmlFor="contrib-community" className="field-label">Community</label>
+              <input id="contrib-community" value={community} onChange={(e) => setCommunity(e.target.value)} aria-invalid={!!errors.community} aria-describedby={describedBy('community')} className="input" placeholder="Iseyin weavers’ guild" />
+              <ErrorText field="community" />
+            </div>
+            <div>
+              <label htmlFor="contrib-region" className="field-label">Region (optional)</label>
+              <input id="contrib-region" value={region} onChange={(e) => setRegion(e.target.value)} className="input" placeholder="Oyo State" />
+            </div>
+            <div>
+              <label htmlFor="contrib-language" className="field-label">Language (optional)</label>
+              <input id="contrib-language" value={language} onChange={(e) => setLanguage(e.target.value)} className="input" placeholder="Yorùbá, Ọ̀yọ́ dialect" />
             </div>
           </div>
-        </div>
+          <div>
+            <label htmlFor="contrib-sources" className="field-label">Sources</label>
+            <textarea id="contrib-sources" rows={3} value={sources} onChange={(e) => setSources(e.target.value)} aria-invalid={!!errors.sources} aria-describedby={describedBy('sources', 'contrib-sources-hint')} className="input" />
+            <span id="contrib-sources-hint" className="field-hint">Sample citation text. The demo does not check sources, approve content or publish anything.</span>
+            <ErrorText field="sources" />
+          </div>
+        </fieldset>
 
-        {/* 7. Consent Checkbox */}
-        <div className="p-4 bg-[#FAF7F2] rounded-xl border border-[#D7C8B3] space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer text-xs text-stone-700">
-            <input
-              type="checkbox"
-              required
-              checked={consentGiven}
-              onChange={(e) => setConsentGiven(e.target.checked)}
-              className="mt-0.5 text-[#34205B] focus:ring-[#34205B] rounded"
-            />
-            <span className="leading-relaxed">
-              I confirm that the public sample content I enter is suitable for this browser-only demonstration. I understand it is not sent for preservation or peer review.
-            </span>
-          </label>
-        </div>
+        <fieldset aria-describedby={describedBy('sensitivity', 'contrib-sensitivity-hint')}>
+          <legend className="display text-[1.8rem]">Who may see it?</legend>
+          <p id="contrib-sensitivity-hint" className="mt-1 text-ink-soft">This prototype has no access controls, so it only saves public content.</p>
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-3">
+            {SENSITIVITY.map((s, i) => (
+              <label key={s.level} className="choice">
+                <input
+                  id={i === 0 ? 'contrib-sensitivity' : undefined}
+                  type="radio"
+                  name="sensitivity"
+                  value={s.level}
+                  checked={sensitivity === s.level}
+                  onChange={() => setSensitivity(s.level)}
+                />
+                <span>
+                  <span className="block font-semibold">{s.label}</span>
+                  <span className="block text-[0.9375rem] text-ink-soft">{s.desc}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <ErrorText field="sensitivity" />
+        </fieldset>
 
-        {/* Submission Action */}
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-xs font-mono text-stone-500">
-            LOCAL BROWSER DEMO · NOT SENT
-          </span>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="px-6 py-3 text-sm font-medium text-white bg-[#34205B] hover:bg-[#251642] disabled:opacity-50 rounded-lg transition-colors cursor-pointer flex items-center gap-2 shadow-sm"
-          >
-            {submitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Saving Demo Locally...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-4 h-4" />
-                <span>Save Demo Locally</span>
-              </>
+        <fieldset className="space-y-5">
+          <legend className="display text-[1.8rem]">Credit and contact</legend>
+          <fieldset>
+            <legend className="field-label">Credit</legend>
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-3">
+              {ATTRIBUTION.map((a) => (
+                <label key={a.id} className="choice">
+                  <input type="radio" name="attribution" value={a.id} checked={attribution === a.id} onChange={() => setAttribution(a.id)} />
+                  <span>{a.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-2">
+            {attribution !== 'anonymous' && (
+              <div>
+                <label htmlFor="contrib-name" className="field-label">Name to show</label>
+                <input id="contrib-name" value={name} onChange={(e) => setName(e.target.value)} className="input" placeholder="Sample Contributor" autoComplete="off" />
+              </div>
             )}
-          </button>
+            <div>
+              <label htmlFor="contrib-email" className="field-label">Email</label>
+              <input id="contrib-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} aria-invalid={!!errors.email} aria-describedby={describedBy('email', 'contrib-email-hint')} className="input" placeholder="demo@example.invalid" autoComplete="off" />
+              <span id="contrib-email-hint" className="field-hint">Use a placeholder address. It is stored in this browser only.</span>
+              <ErrorText field="email" />
+            </div>
+          </div>
+        </fieldset>
+
+        <div>
+          <label className="choice">
+            <input id="contrib-consent" type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} aria-invalid={!!errors.consent} aria-describedby={describedBy('consent')} />
+            <span>I confirm this is public sample content suitable for a browser-only demo, and I understand it is not sent for preservation or review.</span>
+          </label>
+          <ErrorText field="consent" />
         </div>
 
+        <button type="submit" disabled={submitting} className="btn btn-primary">
+          {submitting ? <><span className="spinner" aria-hidden="true" /> Saving…</> : 'Save demo entry'}
+        </button>
       </form>
 
-      {/* Local Browser Demo Register */}
-      <div className="bg-white rounded-2xl border border-[#D7C8B3] p-6 sm:p-8 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-              THIS BROWSER ONLY · PUBLIC-SENSITIVITY DEMO ITEMS
-            </span>
-            <h3 className="font-serif text-xl font-medium text-[#34205B]">
-              Local Demo Submissions
-            </h3>
-          </div>
-          <span className="font-mono text-xs text-stone-500">
-            {recentContributions.length} local items
-          </span>
-        </div>
-
-        <div className="space-y-3">
-          {loadError && <p role="alert" className="text-sm text-rose-800">Local demo entries could not be loaded.</p>}
-          {!loadError && recentContributions.length === 0 && <p className="text-sm text-stone-500">No public-sensitivity demo submissions are saved in this browser.</p>}
-          {recentContributions.map((c) => (
-            <div key={c.id} className="p-4 bg-[#FAF7F2] rounded-xl border border-stone-200 text-xs space-y-1">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium text-stone-900">{c.title}</span>
-                <span className="font-mono text-[11px] text-amber-800 bg-amber-100/60 px-2 py-0.5 rounded">
-                  LOCAL DEMO · NOT REVIEWED
-                </span>
-              </div>
-              <p className="text-stone-600 line-clamp-1">{c.description}</p>
-              <div className="flex items-center gap-3 text-stone-500 font-mono text-[11px] pt-1">
-                <span>REF: {c.reference}</span>
-                <span>COMMUNITY: {c.community}</span>
-                <span>SUBMITTED: {new Date(c.submittedAt).toLocaleDateString()}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
+      <section aria-labelledby="recent-title" className="mt-16 border-t border-rule pt-8">
+        <h2 id="recent-title" className="text-[2rem]">Saved in this browser</h2>
+        {recent.length === 0 ? (
+          <p className="mt-3 text-ink-soft">No demo entries yet.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-rule">
+            {recent.map((c) => (
+              <li key={c.id} className="py-4">
+                <h3 className="text-[1.4rem]">{c.title}</h3>
+                <p className="mt-1 line-clamp-2 text-ink-soft">{c.description}</p>
+                <p className="mt-1 text-[0.875rem] text-ink-soft tnum">
+                  {c.reference}, {c.community}, saved {new Date(c.submittedAt).toLocaleDateString('en-GB')}. Not reviewed.
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 };

@@ -1,286 +1,161 @@
-import React, { useState } from 'react';
-import { useRouter } from '../context/RouterContext';
+import React, { useRef, useState } from 'react';
+import { Link } from '../lib/router';
 import { apiService } from '../services/apiService';
-import { QnAResponse, CulturalRecord, ArtisanProfile } from '../types';
-import { 
-  Sparkles, 
-  Search, 
-  BookOpen, 
-  AlertTriangle, 
-  CheckCircle2, 
-  ArrowRight, 
-  ShieldCheck, 
-  HelpCircle,
-  Users
-} from 'lucide-react';
+import type { ArtisanProfile, CulturalRecord, QnAResponse } from '../types';
+import { ErrorBlock, PageIntro } from '../components/ui';
+
+const EXAMPLES = [
+  'What does natural indigo mean in Yoruba adire?',
+  'How do horizontal and vertical aso-oke looms differ?',
+  'What materials were used in Benin bronze casting?',
+  'What do the colours of royal ìlẹ̀kẹ̀ beads signify?',
+];
+
+const CONFIDENCE_TEXT: Record<QnAResponse['confidence'], string> = {
+  high: 'High',
+  partial_evidence: 'Partial evidence',
+  insufficient_evidence: 'Insufficient evidence',
+  unsupported: 'Unsupported',
+};
 
 export const AskCultureLensPage: React.FC = () => {
-  const { navigate } = useRouter();
   const [question, setQuestion] = useState('');
+  const [asked, setAsked] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [error, setError] = useState(false);
   const [response, setResponse] = useState<QnAResponse | null>(null);
-  const [groundedRecords, setGroundedRecords] = useState<CulturalRecord[]>([]);
-  const [associatedArtisans, setAssociatedArtisans] = useState<ArtisanProfile[]>([]);
+  const [records, setRecords] = useState<CulturalRecord[]>([]);
+  const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
+  const latest = useRef(0);
 
-  const exampleQuestions = [
-    {
-      label: 'Natural Indigo in Adire',
-      query: 'What is the cultural and symbolic meaning of natural indigo in Yoruba Adire?'
-    },
-    {
-      label: 'Loom Weaving Traditions',
-      query: 'How does Aso-Oke weaving differ between traditional horizontal and vertical looms?'
-    },
-    {
-      label: 'Benin Bronze Lost-Wax',
-      query: 'What materials and techniques were used in ancient Benin bronze casting?'
-    },
-    {
-      label: 'Royal Beaded Regalia',
-      query: 'Who makes authentic royal Yoruba Ileke beads and what do the colors signify?'
-    }
-  ];
-
-  const handleAsk = async (queryText: string) => {
-    if (!queryText.trim()) return;
+  const ask = async (text: string) => {
+    const q = text.trim();
+    if (!q) return;
+    const request = ++latest.current;
+    setAsked(q);
     setLoading(true);
-    setResponse(null);
-    setErrorMessage(null);
-    setGroundedRecords([]);
-    setAssociatedArtisans([]);
-
+    setError(false);
     try {
-      const res = await apiService.askCulturalQuestion(queryText);
+      const res = await apiService.askCulturalQuestion(q);
+      const [recs, arts] = await Promise.all([
+        apiService.getCulturalRecordsBySlugs(res.groundedRecordSlugs),
+        apiService.getArtisansByIds(res.associatedArtisanIds),
+      ]);
+      if (request !== latest.current) return; // a newer question replaced this one
       setResponse(res);
-
-      // Load referenced records
-      if (res.groundedRecordSlugs.length > 0) {
-        const recList: CulturalRecord[] = [];
-        for (const slug of res.groundedRecordSlugs) {
-          const r = await apiService.getCulturalRecordBySlug(slug);
-          if (r) recList.push(r);
-        }
-        setGroundedRecords(recList);
-      }
-
-      // Load associated artisans
-      if (res.associatedArtisanIds.length > 0) {
-        const artList: ArtisanProfile[] = [];
-        for (const aId of res.associatedArtisanIds) {
-          const a = await apiService.getArtisanById(aId);
-          if (a) artList.push(a);
-        }
-        setAssociatedArtisans(artList);
-      }
+      setRecords(recs);
+      setArtisans(arts);
     } catch {
-      setErrorMessage('The local sample response could not be loaded. Please try again.');
+      if (request === latest.current) setError(true);
     } finally {
-      setLoading(false);
+      if (request === latest.current) setLoading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleAsk(question);
-  };
+  const matched = response && response.groundedRecordSlugs.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10">
-      
-      {/* Header */}
-      <div className="space-y-3">
-        <div className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-[#8A68C7]">
-          <Sparkles className="w-4 h-4" />
-          <span>LOCAL SAMPLE Q&A · NO AI SERVICE</span>
+    <div className="page max-w-4xl">
+      <PageIntro
+        title="Ask CultureLens"
+        lead="Ask about a craft and get the closest of four canned sample answers. No AI model is called, nothing is looked up live, and the answer text is not verified."
+      />
+
+      <form onSubmit={(e) => { e.preventDefault(); ask(question); }} className="border-y border-rule py-5">
+        <label htmlFor="question" className="field-label">Your question</label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            id="question"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="What does indigo mean in adire?"
+            className="input"
+          />
+          <button type="submit" disabled={loading || !question.trim()} className="btn btn-primary shrink-0">
+            {loading ? <><span className="spinner" aria-hidden="true" /> Finding an answer…</> : 'Ask'}
+          </button>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#34205B] font-medium tracking-tight">
-          Ask CultureLens
-        </h1>
-        <p className="text-sm sm:text-base text-stone-600 leading-relaxed max-w-2xl">
-          Try the interface with canned keyword-matched sample responses. This prototype does not call Gemma, retrieve live records, or verify the sample answer text or citations.
-        </p>
-      </div>
-
-      {/* Question Input Console */}
-      <div className="bg-white p-6 rounded-2xl border-2 border-[#D7C8B3] shadow-sm space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <label htmlFor="cultural-question" className="block text-xs font-mono uppercase tracking-wider text-stone-500">
-            ENTER YOUR CULTURAL QUESTION
-          </label>
-          <div className="relative flex items-center">
-            <input
-              id="cultural-question"
-              type="text"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="e.g. What is the symbolic meaning of Indigo in Yoruba Adire?..."
-              className="w-full py-3.5 pl-4 pr-28 text-sm sm:text-base rounded-lg border border-[#D7C8B3] text-[#241F2B] focus:outline-none focus:ring-2 focus:ring-[#34205B]"
-            />
-            <button
-              type="submit"
-              disabled={loading || !question.trim()}
-              className="absolute right-2 px-5 py-2 text-xs sm:text-sm font-medium text-white bg-[#34205B] hover:bg-[#251642] disabled:opacity-50 rounded-md transition-colors cursor-pointer"
-            >
-              {loading ? 'Consulting...' : 'Ask'}
-            </button>
-          </div>
-        </form>
-
-        {/* Example Query Prompts */}
-        <div className="pt-2 border-t border-stone-100 space-y-2">
-          <span className="text-xs text-stone-500 font-mono block">SAMPLE PROMPTS:</span>
-          <div className="flex flex-wrap gap-2">
-            {exampleQuestions.map((ex) => (
-              <button
-                key={ex.label}
-                type="button"
-                onClick={() => {
-                  setQuestion(ex.query);
-                  handleAsk(ex.query);
-                }}
-                className="px-3 py-1.5 text-xs text-[#34205B] bg-[#F4EFE5] hover:bg-[#D7C8B3]/60 border border-[#D7C8B3] rounded-md transition-colors cursor-pointer text-left"
-              >
-                {ex.label}
-              </button>
+        <div className="mt-4">
+          <p className="text-[0.9375rem] text-ink-soft">Or try one of these:</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {EXAMPLES.map((ex) => (
+              <li key={ex}>
+                <button
+                  type="button"
+                  onClick={() => { setQuestion(ex); ask(ex); }}
+                  className="rounded-[3px] border border-rule px-3 py-1.5 text-left text-[0.9375rem] hover:border-ink"
+                >
+                  {ex}
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
-      </div>
+      </form>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="p-8 bg-white rounded-xl border border-[#D7C8B3] text-center space-y-3 animate-pulse">
-          <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-xs font-mono uppercase tracking-wider text-stone-600">
-            Loading local sample response...
-          </p>
-        </div>
-      )}
+      <div aria-live="polite" aria-busy={loading} className="mt-10">
+        {error && <ErrorBlock title="The sample answer did not load." onRetry={() => ask(asked)} />}
 
-      {errorMessage && (
-        <div role="alert" className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-900 flex items-center justify-between gap-4">
-          <span>{errorMessage}</span>
-          <button onClick={() => handleAsk(question)} className="shrink-0 underline font-medium">Retry</button>
-        </div>
-      )}
+        {response && !error && (
+          <article className={`rise space-y-8 transition-opacity ${loading ? 'opacity-60' : ''}`}>
+            <header>
+              <p className="text-ink-soft">You asked</p>
+              <h2 className="mt-1 text-[clamp(1.8rem,4vw,2.6rem)] leading-[1.02]">{asked}</h2>
+              {matched && (
+                <p className="mt-3 text-[0.9375rem] text-ink-soft">
+                  Closest sample question: <span className="italic">{response.question}</span>
+                </p>
+              )}
+            </header>
 
-      {/* Answer Presentation Card */}
-      {response && !loading && (
-        <div className="bg-white rounded-2xl border border-[#D7C8B3] overflow-hidden shadow-sm space-y-6 p-6 sm:p-8 animate-in fade-in duration-200">
-          
-          {/* Question Echo */}
-          <div className="border-b border-[#D7C8B3]/50 pb-4">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-stone-400">
-              USER INQUIRY
-            </span>
-            <h2 className="font-serif text-xl sm:text-2xl text-[#34205B] font-medium mt-1">
-              "{response.question}"
-            </h2>
-          </div>
-
-          {/* Grounded Answer Body */}
-          <div className="space-y-4">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-[#8A68C7]">
-              SAMPLE RESPONSE · FIXTURE CONTENT
-            </span>
-            <div className="text-sm sm:text-base text-stone-800 leading-relaxed font-sans space-y-3">
-              <p>{response.answer}</p>
-            </div>
-          </div>
-
-          <p className="text-xs text-stone-500 border-t border-stone-100 pt-3">
-            Sample-data confidence label: <strong>{response.confidence.replaceAll('_', ' ')}</strong>. This value and response are not a live model evaluation.
-          </p>
-
-          {/* Uncertainty or Conflict Notes */}
-          {response.uncertaintyOrDisputeNotes && (
-            <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5 text-xs">
-              <div className="flex items-center gap-1.5 text-amber-900 font-medium">
-                <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" />
-                <span>Regional Variation & Nuance Note</span>
-              </div>
-              <p className="text-amber-800 leading-relaxed">
-                {response.uncertaintyOrDisputeNotes}
+            <section aria-labelledby="answer-title" className="plaque nails p-5 sm:p-7">
+              <h3 id="answer-title" className="text-[1.6rem]">{matched ? 'Sample answer' : 'No sample answer'}</h3>
+              <p className="measure mt-3 text-[1.0625rem] leading-[1.75]">{response.answer}</p>
+              <p className="mt-4 text-[0.9375rem] text-ink-soft">
+                Confidence in the sample data: {CONFIDENCE_TEXT[response.confidence]}. This is a fixture value, not a model's assessment.
               </p>
-            </div>
-          )}
+            </section>
 
-          {/* Traceable Platform Records (PRD FR-024) */}
-          {groundedRecords.length > 0 && (
-            <div className="space-y-3 pt-2 border-t border-[#D7C8B3]/50">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-stone-500 block">
-                RELATED SAMPLE RECORDS · NOT VERIFIED
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {groundedRecords.map((rec) => (
-                  <div
-                    key={rec.id}
-                    onClick={() => navigate(`/culture/${rec.slug}`)}
-                    className="p-3.5 bg-[#FAF7F2] rounded-lg border border-stone-200 hover:border-[#8A68C7] transition-all cursor-pointer group flex items-start justify-between gap-3"
-                  >
-                    <div>
-                      <h4 className="font-serif text-xs font-medium text-[#34205B] group-hover:text-[#8A68C7]">
-                        {rec.title}
-                      </h4>
-                      <p className="text-[11px] text-stone-500 mt-0.5">{rec.community}</p>
-                      <span className="text-[10px] font-mono text-emerald-800 mt-1 block">
-                        SAMPLE FIXTURE
-                      </span>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-stone-400 group-hover:translate-x-1 transition-transform shrink-0 mt-1" />
+            {response.uncertaintyOrDisputeNotes && (
+              <section aria-labelledby="nuance-title">
+                <h3 id="nuance-title" className="text-[1.6rem]">{matched ? 'Variation and uncertainty' : 'What next'}</h3>
+                <p className="measure mt-2 leading-[1.75]">{response.uncertaintyOrDisputeNotes}</p>
+              </section>
+            )}
+
+            {(records.length > 0 || artisans.length > 0) && (
+              <section aria-labelledby="related-title" className="grid grid-cols-[minmax(0,1fr)] gap-6 sm:grid-cols-2">
+                <h3 id="related-title" className="sr-only">Related sample content</h3>
+                {records.length > 0 && (
+                  <div>
+                    <h4 className="text-[1.0625rem]">Related records</h4>
+                    <ul className="mt-2 space-y-1">
+                      {records.map((rec) => (
+                        <li key={rec.id}><Link to={`/culture/${rec.slug}`} className="link">{rec.title}</Link></li>
+                      ))}
+                    </ul>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Associated Artisans (Connecting knowledge to real practitioners) */}
-          {associatedArtisans.length > 0 && (
-            <div className="space-y-3 pt-2 border-t border-[#D7C8B3]/50">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-stone-500 block">
-                ASSOCIATED SAMPLE PROFILES · NOT VERIFIED
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {associatedArtisans.map((artisan) => (
-                  <div
-                    key={artisan.id}
-                    onClick={() => navigate(`/artisans/${artisan.slug}`)}
-                    className="p-3.5 bg-[#FAF7F2] rounded-lg border border-stone-200 hover:border-[#8A68C7] transition-all cursor-pointer group flex items-center gap-3"
-                  >
-                    <img
-                      src={artisan.avatarUrl}
-                      alt={artisan.displayName}
-                      className="w-10 h-10 rounded-full object-cover border border-stone-200 shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h5 className="font-medium text-xs text-[#34205B] group-hover:text-[#8A68C7] truncate">
-                        {artisan.displayName}
-                      </h5>
-                      <p className="text-[11px] text-stone-500 truncate">{artisan.craft}</p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-stone-400 group-hover:translate-x-1 transition-transform shrink-0" />
+                )}
+                {artisans.length > 0 && (
+                  <div>
+                    <h4 className="text-[1.0625rem]">Linked sample profiles</h4>
+                    <ul className="mt-2 space-y-1">
+                      {artisans.map((a) => (
+                        <li key={a.id}><Link to={`/artisans/${a.slug}`} className="link">{a.displayName}</Link> <span className="text-ink-soft">(not verified)</span></li>
+                      ))}
+                    </ul>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-        </div>
-      )}
-
-      {/* Architecture & AI Grounding Governance Card */}
-      <div className="p-6 bg-[#FAF7F2] rounded-xl border border-[#D7C8B3] space-y-3 text-xs text-stone-700">
-        <div className="flex items-center gap-2 text-[#34205B] font-medium text-sm">
-          <ShieldCheck className="w-4 h-4 text-[#8A68C7]" />
-          <span>Architectural Integrity Notice</span>
-        </div>
-        <p className="leading-relaxed">
-          This page currently uses a local keyword-to-fixture mapping. No AI model, archive retrieval, database, or reviewer service is connected. Any future Gemma integration must be provided by the backend and reviewed against approved sources before responses are presented as factual.
-        </p>
+                )}
+              </section>
+            )}
+          </article>
+        )}
       </div>
 
+      <p className="measure mt-14 text-[0.9375rem] text-ink-soft">
+        This page matches whole words in your question against four sample answers. A future AI service would have to run on a backend and
+        be checked against approved sources before its answers could be presented as fact.
+      </p>
     </div>
   );
 };

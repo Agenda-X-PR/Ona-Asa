@@ -1,20 +1,54 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# CultureLens · Ọ̀nà Àṣà
 
-# Run and deploy your AI Studio app
+A front-end prototype by Team Àṣà for Hack for Humanity Lagos 2026. It lets
+people browse sample records of Nigerian craft heritage, read illustrative
+artisan profiles, try a workshop booking flow, ask sample questions, and
+propose a contribution.
 
-This contains everything you need to run your app locally.
+## What is real and what is not
 
-View your app in AI Studio: https://ai.studio/apps/fb092cfa-3650-4046-9197-e104a33b448b
+Everything is sample data. There is no backend.
 
-## Run Locally
+- Records, artisans, workshops and Q&A answers are fixtures in
+  `src/data/mockData.ts`. Their names, citations and claims have not been
+  independently verified.
+- Booking requests and contributions are saved only in the visitor's browser
+  (`localStorage`). Nothing is sent to an artisan, reviewer or payment
+  provider.
+- The Q&A page matches your question against four canned answers. No AI model
+  is called, so no API key is needed.
 
-**Prerequisites:**  Node.js
+See `TODO.md` for the content and images the team still needs to supply.
 
+## Run it
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Requires Node.js 20 or newer.
+
+```sh
+npm install
+npm run dev        # http://localhost:3000
+```
+
+Other scripts:
+
+```sh
+npm run build      # production build into dist/
+npm run preview    # serve the build
+npm run lint       # type-check
+npm test           # unit and page tests (node:test + jsdom)
+```
+
+## Stack
+
+React 19, Vite, Tailwind CSS v4 and TypeScript. Routing is hash based
+(`#/discover`, `#/culture/<slug>`), so the build can be served from any static
+host without rewrites.
+
+## Layout
+
+- `src/pages/` one component per route
+- `src/components/` shared layout and UI pieces
+- `src/lib/` routing, booking rules and theme
+- `src/utils/search.ts` the search and Q&A matcher
+- `src/services/apiService.ts` the fixture-backed stand-in for a real API
+- `DESIGN.md` the visual system and its tokens
