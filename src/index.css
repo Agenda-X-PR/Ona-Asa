@@ -1,24 +1,457 @@
 @import "tailwindcss";
 
-@theme {
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+/*
+  CultureLens visual system: "the plaque wall".
+  Records hang like cast panels on a pillar. Each panel's ground is chased with
+  its craft's pattern; the reading column stays calm. Tokens are documented in
+  DESIGN.md.
+*/
 
-  --color-deep-indigo: #34205B;
-  --color-heritage-violet: #8A68C7;
-  --color-archive-ivory: #F4EFE5;
-  --color-warm-sand: #D7C8B3;
-  --color-ink: #241F2B;
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+  --ground: #d8ddd3;       /* verdigris-washed stone */
+  --ground-deep: #c8cfc3;  /* recess behind panels */
+  --face: #eef0ea;         /* panel face, form fields */
+  --ink: #1f1a14;          /* bronze-black text */
+  --ink-soft: #4b4337;     /* secondary text, 8.5:1 on ground */
+  --rule: #747c70;         /* hairlines and field borders, 3.7:1 on face */
+  --brass: #74490a;        /* accent text and links, 5.6:1 on ground */
+  --brass-fill: #b9842c;   /* nail heads, selection, active marks */
+  --patina: #2b6356;       /* focus ring, status marks */
+  --alert: #9a2b1f;
+  --frame: #231c14;        /* lintel and footer pillar */
+  --frame-ink: #ebdfc6;
+  --frame-soft: #b8aa8f;
+  --frame-accent: #d6a24a;
+  --motif: #6f6450;        /* chased pattern lines on a panel */
+  --shadow: 31 26 20;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #15120d;
+  --ground-deep: #0f0d09;
+  --face: #221c14;
+  --ink: #eee5d1;
+  --ink-soft: #b9ad94;
+  --rule: #7a6c58;
+  --brass: #dca84e;
+  --brass-fill: #c08f38;
+  --patina: #7cc0ae;
+  --alert: #ec9484;
+  --frame: #0b0907;
+  --frame-ink: #ebdfc6;
+  --frame-soft: #a99c82;
+  --frame-accent: #dca84e;
+  --motif: #a48a5c;
+  --shadow: 0 0 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #15120d;
+    --ground-deep: #0f0d09;
+    --face: #221c14;
+    --ink: #eee5d1;
+    --ink-soft: #b9ad94;
+    --rule: #7a6c58;
+    --brass: #dca84e;
+    --brass-fill: #c08f38;
+    --patina: #7cc0ae;
+    --alert: #ec9484;
+    --frame: #0b0907;
+    --frame-ink: #ebdfc6;
+    --frame-soft: #a99c82;
+    --frame-accent: #dca84e;
+    --motif: #a48a5c;
+    --shadow: 0 0 0;
+  }
+}
+
+@theme inline {
+  --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+  --font-sans: 'Literata', Georgia, serif;
+  --font-serif: 'Literata', Georgia, serif;
+
+  --color-ground: var(--ground);
+  --color-ground-deep: var(--ground-deep);
+  --color-face: var(--face);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-rule: var(--rule);
+  --color-brass: var(--brass);
+  --color-brass-fill: var(--brass-fill);
+  --color-patina: var(--patina);
+  --color-alert: var(--alert);
+  --color-frame: var(--frame);
+  --color-frame-ink: var(--frame-ink);
+  --color-frame-soft: var(--frame-soft);
+  --color-frame-accent: var(--frame-accent);
+  --color-motif: var(--motif);
 }
 
 @layer base {
+  html {
+    background: var(--ground);
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+
   body {
-    background-color: #F4EFE5;
-    color: #241F2B;
+    background: var(--ground);
+    color: var(--ink);
     font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    font-optical-sizing: auto;
+    caret-color: var(--brass);
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
   }
-  h1, h2, h3, .font-editorial {
-    font-family: var(--font-serif);
+
+  body.scroll-locked {
+    overflow: hidden;
   }
+
+  h1, h2, h3, .display {
+    font-family: var(--font-display);
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+
+  h4, h5 {
+    font-weight: 650;
+    line-height: 1.3;
+  }
+
+  p, li, dd {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+  }
+
+  ::selection {
+    background: var(--brass-fill);
+    color: #1a140c;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--patina);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  input, select, textarea, button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--ink-soft);
+    opacity: 0.8;
+  }
+
+  * {
+    scrollbar-color: var(--rule) transparent;
+  }
+}
+
+@layer components {
+  /* Measure and rhythm */
+  .page {
+    width: 100%;
+    max-width: 78rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 640px) {
+    .page { padding-inline: 2rem; }
+  }
+
+  .measure { max-width: 68ch; }
+
+  .tnum { font-variant-numeric: tabular-nums lining-nums; }
+
+  /* Text link in the reading column */
+  .link {
+    color: var(--brass);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--brass) 45%, transparent);
+    transition: text-decoration-color 160ms ease-out;
+  }
+  .link:hover { text-decoration-color: currentColor; }
+
+  /*
+    The panel: a cast plaque with a raised edge and four nail holes. Depth comes
+    from a top highlight, a bottom shade and one offset shadow.
+  */
+  .plaque {
+    position: relative;
+    background-color: var(--face);
+    border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent);
+    border-radius: 3px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      inset 0 -2px 0 rgb(var(--shadow) / 0.12),
+      0 1px 2px rgb(var(--shadow) / 0.18),
+      0 6px 14px -8px rgb(var(--shadow) / 0.35);
+  }
+  :root[data-theme="dark"] .plaque {
+    box-shadow:
+      inset 0 1px 0 rgb(255 240 210 / 0.06),
+      inset 0 -2px 0 rgb(0 0 0 / 0.35),
+      0 6px 14px -8px rgb(0 0 0 / 0.8);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .plaque {
+      box-shadow:
+        inset 0 1px 0 rgb(255 240 210 / 0.06),
+        inset 0 -2px 0 rgb(0 0 0 / 0.35),
+        0 6px 14px -8px rgb(0 0 0 / 0.8);
+    }
+  }
+
+  .nails {
+    background-image:
+      radial-gradient(circle at 10px 10px, var(--brass-fill) 0 2.5px, transparent 3.5px),
+      radial-gradient(circle at calc(100% - 10px) 10px, var(--brass-fill) 0 2.5px, transparent 3.5px),
+      radial-gradient(circle at 10px calc(100% - 10px), var(--brass-fill) 0 2.5px, transparent 3.5px),
+      radial-gradient(circle at calc(100% - 10px) calc(100% - 10px), var(--brass-fill) 0 2.5px, transparent 3.5px);
+  }
+
+  /* A linked panel lifts slightly when pointed at; motion answers the hover. */
+  .plaque-link {
+    display: block;
+    text-decoration: none;
+    transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms ease-out;
+  }
+  .plaque-link:hover {
+    transform: translateY(-2px);
+  }
+  .plaque-link:hover .plaque-title {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.15em;
+  }
+
+  /* The chased field inside a panel */
+  .motif-field {
+    color: var(--motif);
+    background: color-mix(in srgb, var(--face) 82%, var(--ground-deep));
+    overflow: hidden;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 3px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 160ms ease-out, color 160ms ease-out, border-color 160ms ease-out;
+  }
+  .btn:disabled, .btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--ground);
+    border: 1px solid var(--ink);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--brass);
+    border-color: var(--brass);
+    color: var(--face);
+  }
+  :root[data-theme="dark"] .btn-primary:hover:not(:disabled) { color: #1a140c; }
+  .btn-quiet {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-quiet:hover:not(:disabled) {
+    border-color: var(--ink);
+  }
+
+  /* Form fields */
+  .field-label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 0.35rem;
+  }
+  .field-hint {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--ink-soft);
+    margin-top: 0.3rem;
+  }
+  .input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--face);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    box-shadow: inset 0 1px 2px rgb(var(--shadow) / 0.12);
+  }
+  .input:focus-visible {
+    outline: 2px solid var(--patina);
+    outline-offset: 1px;
+    border-color: var(--patina);
+  }
+  .input[aria-invalid="true"] { border-color: var(--alert); }
+  select.input {
+    appearance: none;
+    padding-right: 2.25rem;
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+      linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 1.1rem) 52%, calc(100% - 0.75rem) 52%;
+    background-size: 0.35rem 0.35rem;
+    background-repeat: no-repeat;
+  }
+
+  /* Radio and checkbox chosen as panels */
+  .choice {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    background: var(--face);
+    cursor: pointer;
+  }
+  .choice:has(input:checked) {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+  }
+  .choice:has(input:disabled) {
+    cursor: not-allowed;
+    background: transparent;
+    border-style: dashed;
+  }
+  .choice:has(input:focus-visible) {
+    outline: 2px solid var(--patina);
+    outline-offset: 2px;
+  }
+  .choice input {
+    margin-top: 0.3rem;
+    accent-color: var(--ink);
+  }
+
+  /* Notices: demo disclosures and errors. A full outline, no side stripe. */
+  .notice {
+    padding: 0.8rem 1rem;
+    border: 1px dashed var(--rule);
+    border-radius: 3px;
+    font-size: 0.9375rem;
+    color: var(--ink-soft);
+  }
+  .notice-error {
+    border: 1px solid var(--alert);
+    color: var(--alert);
+    background: color-mix(in srgb, var(--alert) 7%, transparent);
+  }
+
+  /* A rule with a nail head at the start: section openers */
+  .opener {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .opener::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .definition-list {
+    display: grid;
+    grid-template-columns: minmax(7rem, auto) 1fr;
+    gap: 0.5rem 1rem;
+  }
+  .definition-list dt { color: var(--ink-soft); font-size: 0.9375rem; }
+  .definition-list dd { margin: 0; }
+}
+
+/* Motion. The one authored moment is the home wall being cast: each panel's
+   pattern is revealed top to bottom like metal filling a mould. */
+@keyframes pour {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pour {
+  animation: pour 900ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+}
+.rise {
+  animation: rise 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 800ms linear infinite;
+}
+
+dialog.sheet {
+  margin: auto;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+}
+dialog.sheet[open] {
+  animation: rise 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+dialog.sheet::backdrop {
+  background: rgb(15 12 8 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .spinner {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.6;
+  }
+  .plaque-link:hover { transform: none; }
 }

@@ -1,419 +1,253 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from '../context/RouterContext';
+import React, { useEffect, useState } from 'react';
+import { ArrowLeft, Check, Link2 } from 'lucide-react';
+import { Link, useRouter } from '../lib/router';
 import { apiService } from '../services/apiService';
-import { CulturalRecord, ArtisanProfile } from '../types';
-import { CulturalStatusLabel, SensitivityLabel } from '../components/common/StatusIndicators';
-import { 
-  ArrowLeft, 
-  BookOpen, 
-  ShieldCheck, 
-  Share2, 
-  Users, 
-  MapPin, 
-  Compass, 
-  AlertTriangle,
-  ArrowRight,
-  Send,
-  Check
-} from 'lucide-react';
+import type { ArtisanProfile, CulturalRecord } from '../types';
+import { CRAFT_NAMES } from '../components/Motif';
+import { CraftFigure, ErrorBlock, Loading, Monogram, SensitivityText, StatusMark, statusText } from '../components/ui';
+
+const SOURCE_TYPE: Record<string, string> = {
+  oral_history: 'Oral history',
+  academic_archive: 'Academic archive',
+  community_elder: 'Community elder',
+  museum_catalogue: 'Museum catalogue',
+  fieldwork: 'Fieldwork',
+};
 
 export const CultureDetailPage: React.FC = () => {
-  const { params, navigate } = useRouter();
+  const { params } = useRouter();
   const slug = params.slug;
 
   const [record, setRecord] = useState<CulturalRecord | null>(null);
   const [artisans, setArtisans] = useState<ArtisanProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  
-  // Correction suggestion modal/state
-  const [showCorrectionForm, setShowCorrectionForm] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const [correctionNote, setCorrectionNote] = useState('');
-  const [correctionSubmitted, setCorrectionSubmitted] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [correctionShown, setCorrectionShown] = useState(false);
+  const [copied, setCopied] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   useEffect(() => {
-    let isMounted = true;
+    let active = true;
     setLoading(true);
     setLoadError(false);
-
-    if (slug) {
-      apiService.getCulturalRecordBySlug(slug).then(async (rec) => {
-        if (!isMounted) return;
-        setRecord(rec);
-
-        if (rec && rec.relatedArtisanIds.length > 0) {
-          const artisanList: ArtisanProfile[] = [];
-          for (const aId of rec.relatedArtisanIds) {
-            const art = await apiService.getArtisanById(aId);
-            if (art) artisanList.push(art);
-          }
-          if (isMounted) setArtisans(artisanList);
-        }
-        setLoading(false);
-      }).catch(() => {
-        if (isMounted) {
-          setLoadError(true);
-          setLoading(false);
-        }
-      });
-    } else {
-      setLoading(false);
-    }
-
+    setArtisans([]);
+    (async () => {
+      if (!slug) return null;
+      const rec = await apiService.getCulturalRecordBySlug(slug);
+      const related = rec ? await apiService.getArtisansByIds(rec.relatedArtisanIds) : [];
+      return { rec, related };
+    })()
+      .then((result) => {
+        if (!active) return;
+        setRecord(result?.rec ?? null);
+        setArtisans(result?.related ?? []);
+      })
+      .catch(() => active && setLoadError(true))
+      .finally(() => active && setLoading(false));
     return () => {
-      isMounted = false;
+      active = false;
     };
-  }, [slug, retryCount]);
+  }, [slug, attempt]);
 
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
+  useEffect(() => {
+    if (copied === 'idle') return;
+    const timer = window.setTimeout(() => setCopied('idle'), 2500);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied('copied');
+    } catch {
+      setCopied('failed');
     }
   };
 
-  const handleCorrectionSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!correctionNote.trim()) return;
-    setCorrectionSubmitted(true);
-    setTimeout(() => {
-      setShowCorrectionForm(false);
-      setCorrectionSubmitted(false);
-      setCorrectionNote('');
-    }, 2000);
-  };
-
-  if (loading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center space-y-3">
-        <div className="w-8 h-8 border-2 border-[#34205B] border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs font-mono uppercase tracking-wider text-stone-500">
-          Loading local sample record...
-        </p>
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div role="alert" className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
-        <h2 className="font-serif text-2xl text-[#34205B]">The sample record could not be loaded</h2>
-        <button onClick={() => setRetryCount((count) => count + 1)} className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md">Retry</button>
-      </div>
-    );
-  }
-
+  if (loading) return <div className="page"><Loading label="Loading the sample record…" /></div>;
+  if (loadError) return <div className="page"><ErrorBlock title="This sample record did not load." onRetry={() => setAttempt((n) => n + 1)} /></div>;
   if (!record) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center space-y-4">
-        <h2 className="font-serif text-2xl text-[#34205B]">Cultural Record Not Found</h2>
-        <p className="text-sm text-stone-600">
-          No sample fixture matches this route.
-        </p>
-        <button
-          onClick={() => navigate('/discover')}
-          className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] rounded-md"
-        >
-          Return to Discovery
-        </button>
+      <div className="page py-16">
+        <h1 className="text-[clamp(2.5rem,6vw,4rem)]">No record at this address</h1>
+        <p className="mt-3 text-ink-soft">No sample record matches this link.</p>
+        <Link to="/discover" className="btn btn-primary mt-6">Browse all records</Link>
       </div>
     );
   }
 
+  const [mainTitle, subTitle] = record.title.split(/:\s*/);
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
-      
-      {/* Back Navigation & Provenance Utility Strip */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D7C8B3] pb-4">
-        <button
-          onClick={() => navigate('/discover')}
-          className="inline-flex items-center gap-2 text-xs font-medium text-stone-600 hover:text-[#34205B] transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Cultural Discovery</span>
+    <article className="page">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-8">
+        <Link to="/discover" className="inline-flex items-center gap-2 text-[0.9375rem] text-ink-soft no-underline hover:text-ink hover:underline">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All records
+        </Link>
+        <button type="button" onClick={copyLink} className="btn btn-quiet min-h-10 py-1.5 text-[0.875rem]">
+          {copied === 'copied' ? <Check className="h-4 w-4" aria-hidden="true" /> : <Link2 className="h-4 w-4" aria-hidden="true" />}
+          {copied === 'copied' ? 'Link copied' : copied === 'failed' ? 'Copy blocked; use the address bar' : 'Copy link'}
         </button>
-
-        <div className="flex items-center gap-4 text-xs font-mono text-stone-500">
-          <span>SAMPLE FIXTURE: {record.id.toUpperCase()}</span>
-          <span>·</span>
-          <span>FIXTURE DATE: {record.lastReviewedDate}</span>
-          <button
-            onClick={handleShare}
-            className="p-1 hover:text-[#34205B] transition-colors cursor-pointer inline-flex items-center gap-1"
-            title="Copy link"
-          >
-            {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{copiedLink ? 'Copied' : 'Share'}</span>
-          </button>
-        </div>
       </div>
 
-      {/* Record Header & Editorial Title */}
-      <div className="space-y-4 max-w-3xl">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-stone-500 font-sans">
-          <span>{record.category}</span>
-          <span aria-hidden="true">·</span>
-          <span>{record.region}</span>
-          <span aria-hidden="true">·</span>
-          <CulturalStatusLabel status={record.status} />
-        </div>
-
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-[#34205B] font-medium leading-[1.15]">
-          {record.title}
-        </h1>
-
-        {record.nativeName && (
-          <div className="text-base sm:text-lg font-serif italic text-[#8A68C7]">
-            {record.nativeName} ({record.language} language)
-          </div>
-        )}
-
-        <p className="text-base sm:text-lg text-stone-700 leading-relaxed font-sans pt-2 border-l-2 border-[#8A68C7] pl-4 italic">
-          {record.shortDescription}
-        </p>
-      </div>
-
-      {/* Primary Archival Photography & Caption */}
-      <div className="space-y-2">
-        <div className="w-full h-[360px] sm:h-[480px] rounded-xl overflow-hidden border border-[#D7C8B3] bg-stone-100 shadow-sm">
-          <img
-            src={record.imageUrl}
-            alt={record.title}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-        </div>
-        <div className="flex items-center justify-between text-xs text-stone-500 italic px-1">
-          <span>Fig. 1 — {record.imageCaption}</span>
-          <span className="font-mono text-[11px] not-italic text-stone-400">SAMPLE IMAGE CAPTION</span>
-        </div>
-      </div>
-
-      {/* Two-Column Editorial Asymmetric Layout (70% essay / 30% margin metadata) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-        
-        {/* Main Reading Essay (max-w-prose) */}
-        <div className="lg:col-span-8 space-y-8 font-sans text-stone-800 leading-relaxed text-base">
-          
-          {/* Detailed Narrative with Drop Cap */}
-          <div className="space-y-6">
-            <h2 className="font-serif text-2xl font-medium text-[#34205B]">
-              Cultural Context & Narrative
-            </h2>
-            
-            {record.fullNarrative.map((paragraph, index) => (
-              <p 
-                key={index} 
-                className={index === 0 ? "first-letter:text-5xl first-letter:font-serif first-letter:font-semibold first-letter:float-left first-letter:mr-3 first-letter:mt-1 first-letter:text-[#34205B] leading-relaxed" : "leading-relaxed"}
-              >
-                {paragraph}
-              </p>
-            ))}
-          </div>
-
-          {/* Historical Context Section */}
-          <div className="p-6 bg-white rounded-xl border border-[#D7C8B3] space-y-3">
-            <h3 className="font-serif text-lg font-medium text-[#34205B]">
-              Historical Provenance & Lineage
-            </h3>
-            <p className="text-sm text-stone-700 leading-relaxed">
-              {record.historicalContext}
+      <header className="grid grid-cols-[minmax(0,1fr)] gap-8 pt-8 pb-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end">
+        <div>
+          <p className="text-ink-soft">{record.category}, {record.region}</p>
+          <h1 className="mt-3 text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.92]">{mainTitle}</h1>
+          {subTitle && <p className="display mt-3 text-[clamp(1.4rem,3vw,2rem)] font-[650] text-ink-soft">{subTitle}</p>}
+          {record.nativeName && (
+            <p className="mt-4 text-[1.0625rem] italic">
+              {record.nativeName}
+              {record.language && <span className="not-italic text-ink-soft"> ({record.language})</span>}
             </p>
+          )}
+          <p className="measure mt-5 text-[1.1875rem] leading-relaxed">{record.shortDescription}</p>
+          <div className="mt-5">
+            <StatusMark status={record.status} />
           </div>
+        </div>
+        <CraftFigure craft={record.craftKey} photo={record.photo} size="large" caption priority className="aspect-[4/3]" />
+      </header>
 
-          {/* Materials & Technique */}
-          <div className="p-6 bg-white rounded-xl border border-[#D7C8B3] space-y-3">
-            <h3 className="font-serif text-lg font-medium text-[#34205B]">
-              Materials & Traditional Techniques
-            </h3>
-            <p className="text-sm text-stone-700 leading-relaxed">
-              {record.materialAndTechnique}
-            </p>
-          </div>
-
-          {/* Peer Review / Disputed Indication */}
-          <div className="p-5 bg-[#FAF7F2] rounded-xl border border-[#D7C8B3] space-y-3">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-semibold text-[#241F2B]">
-                  Fixture Review Label: {record.status.replace('_', ' ').toUpperCase()}
-                </h4>
-                <p className="text-xs text-stone-600 mt-1 leading-relaxed">
-                  {record.statusReason || 'This label is part of the local sample data and does not indicate that a real review occurred.'}
-                </p>
-                <div className="pt-2">
-                  <button
-                    onClick={() => setShowCorrectionForm(!showCorrectionForm)}
-                    className="text-xs font-medium text-[#34205B] hover:text-[#8A68C7] underline cursor-pointer"
-                  >
-                    Preview a correction form (not sent) →
-                  </button>
-                </div>
-              </div>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 border-t border-rule pt-10 lg:grid-cols-[minmax(0,68ch)_minmax(0,1fr)] lg:gap-16">
+        <div className="space-y-10">
+          <section aria-labelledby="narrative">
+            <h2 id="narrative" className="text-[2rem]">The story</h2>
+            <div className="mt-4 space-y-4 text-[1.0625rem] leading-[1.75]">
+              {record.fullNarrative.map((paragraph, i) => (
+                <p key={i}>{paragraph}</p>
+              ))}
             </div>
+          </section>
 
-            {/* In-page suggestion form */}
-            {showCorrectionForm && (
-              <form onSubmit={handleCorrectionSubmit} className="pt-3 border-t border-stone-200 space-y-3">
-                <div className="text-xs font-medium text-stone-700">
-                  Sample correction note (not stored or sent):
-                </div>
-                <p className="text-xs text-amber-800">Do not enter personal, restricted, community-restricted, or sacred information in this prototype.</p>
-                <label htmlFor="correction-note" className="sr-only">Sample correction note</label>
+          <section aria-labelledby="history">
+            <h2 id="history" className="text-[2rem]">History and lineage</h2>
+            <p className="mt-4 leading-[1.75]">{record.historicalContext}</p>
+          </section>
+
+          <section aria-labelledby="technique">
+            <h2 id="technique" className="text-[2rem]">Materials and technique</h2>
+            <p className="mt-4 leading-[1.75]">{record.materialAndTechnique}</p>
+          </section>
+
+          <section aria-labelledby="review" className="plaque p-5">
+            <h2 id="review" className="text-[1.6rem]">Sample label: {statusText(record.status)}</h2>
+            <p className="mt-2 text-ink-soft">
+              {record.statusReason ?? 'This label is part of the sample data. No real review has taken place.'}
+            </p>
+            <p className="mt-2 text-[0.9375rem] text-ink-soft">The reason above is fixture text; it does not mean a real review occurred.</p>
+            <button
+              type="button"
+              onClick={() => setCorrectionOpen((open) => !open)}
+              aria-expanded={correctionOpen}
+              aria-controls="correction-form"
+              className="link mt-3 bg-transparent p-0"
+            >
+              {correctionOpen ? 'Hide the correction form' : 'Suggest a correction'}
+            </button>
+            {correctionOpen && (
+              <form
+                id="correction-form"
+                className="rise mt-4 space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (correctionNote.trim()) setCorrectionShown(true);
+                }}
+              >
+                <label htmlFor="correction-note" className="field-label">What should change?</label>
                 <textarea
                   id="correction-note"
                   value={correctionNote}
-                  onChange={(e) => setCorrectionNote(e.target.value)}
-                  placeholder="Detail the variation, community lineage, or reference..."
+                  onChange={(e) => {
+                    setCorrectionNote(e.target.value);
+                    setCorrectionShown(false);
+                  }}
                   rows={3}
                   required
-                  className="w-full p-2.5 text-xs rounded-md border border-[#D7C8B3] bg-white focus:outline-none focus:ring-1 focus:ring-[#34205B]"
+                  aria-describedby="correction-hint"
+                  className="input"
+                  placeholder="The variation, the lineage or the reference"
                 />
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-xs font-medium text-white bg-[#34205B] hover:bg-[#251642] rounded-md transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Preview Local Confirmation</span>
-                  </button>
-                </div>
-                {correctionSubmitted && (
-                  <p className="text-xs text-emerald-700 font-medium pt-1">
-                    Demo only: nothing was sent, saved, or queued for review.
-                  </p>
+                <span id="correction-hint" className="field-hint">
+                  Preview only: the note is not stored or sent. Do not enter personal, restricted or sacred information.
+                </span>
+                <button type="submit" className="btn btn-primary">Preview the correction</button>
+                {correctionShown && (
+                  <p role="status" className="rise text-patina">Preview shown. Nothing was sent, saved or queued for review.</p>
                 )}
               </form>
             )}
-          </div>
+          </section>
 
-          {/* Sources and Archival Provenance */}
-          <div className="space-y-4 pt-4 border-t border-[#D7C8B3]">
-            <h3 className="font-serif text-xl font-medium text-[#34205B]">
-              Sample Source Fields · Not Independently Verified
-            </h3>
-            <div className="space-y-3">
+          <section aria-labelledby="sources">
+            <h2 id="sources" className="text-[2rem]">Sources</h2>
+            <p className="mt-2 text-[0.9375rem] text-ink-soft">Sample citations. They have not been checked.</p>
+            <ol className="mt-4 space-y-4">
               {record.sources.map((src) => (
-                <div key={src.id} className="p-4 bg-white rounded-lg border border-stone-200 text-xs space-y-1">
-                  <div className="font-medium text-stone-900">{src.citation}</div>
-                  <div className="flex items-center gap-3 text-stone-500 font-mono text-[11px] pt-1">
-                    <span>TYPE: {src.type.replace('_', ' ').toUpperCase()}</span>
-                    {src.year && <span>YEAR: {src.year}</span>}
-                    {src.institutionOrContributor && <span>ORIGIN: {src.institutionOrContributor}</span>}
-                  </div>
-                </div>
+                <li key={src.id} className="border-t border-rule pt-4">
+                  <p>{src.citation}</p>
+                  <p className="mt-1 text-[0.9375rem] text-ink-soft tnum">
+                    {SOURCE_TYPE[src.type] ?? src.type}
+                    {src.year && `, ${src.year}`}
+                    {src.institutionOrContributor && `, ${src.institutionOrContributor}`}
+                  </p>
+                </li>
               ))}
-            </div>
-          </div>
-
+            </ol>
+          </section>
         </div>
 
-        {/* Right Margin Sidebar (Metadata, Living Practitioners) */}
-        <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-28">
-          
-          {/* Accession & Cultural Metadata Card */}
-          <div className="bg-white rounded-xl border border-[#D7C8B3] p-6 space-y-4 text-xs">
-            <h3 className="font-mono text-xs uppercase tracking-wider text-[#8A68C7]">
-              SAMPLE METADATA · NOT VERIFIED
-            </h3>
-            
-            <dl className="space-y-3 text-stone-700 divide-y divide-stone-100">
-              <div className="pt-2 flex justify-between">
-                <dt className="text-stone-500 font-mono">Community</dt>
-                <dd className="font-medium text-right">{record.community}</dd>
-              </div>
-              <div className="pt-2 flex justify-between">
-                <dt className="text-stone-500 font-mono">Region</dt>
-                <dd className="font-medium text-right">{record.region.split('(')[0]}</dd>
-              </div>
-              <div className="pt-2 flex justify-between">
-                <dt className="text-stone-500 font-mono">Language</dt>
-                <dd className="font-medium text-right">{record.language || 'Multiple'}</dd>
-              </div>
-              <div className="pt-2 flex justify-between">
-                <dt className="text-stone-500 font-mono">Sensitivity</dt>
-                <dd><SensitivityLabel level={record.sensitivity} /></dd>
-              </div>
-              <div className="pt-2 flex justify-between">
-                <dt className="text-stone-500 font-mono">Fixture Date</dt>
-                <dd className="font-mono">{record.lastReviewedDate}</dd>
-              </div>
+        <aside className="space-y-10 lg:pt-2" aria-label="About this record">
+          <section aria-labelledby="record-facts">
+            <h2 id="record-facts" className="text-[1.6rem]">Record details</h2>
+            <dl className="definition-list mt-4">
+              <dt>Craft</dt>
+              <dd>{CRAFT_NAMES[record.craftKey]}</dd>
+              <dt>Community</dt>
+              <dd>{record.community}</dd>
+              <dt>Region</dt>
+              <dd>{record.region}</dd>
+              <dt>Language</dt>
+              <dd>{record.language ?? 'Not given'}</dd>
+              <dt>Sensitivity</dt>
+              <dd><SensitivityText level={record.sensitivity} /></dd>
+              <dt>Fixture date</dt>
+              <dd className="tnum">{record.lastReviewedDate}</dd>
             </dl>
-          </div>
+          </section>
 
-          {/* Living Practitioners Section */}
-          <div className="bg-[#FAF7F2] rounded-xl border border-[#D7C8B3] p-6 space-y-4">
-            <div className="flex items-center gap-2 text-[#34205B]">
-              <Users className="w-4 h-4 text-[#8A68C7]" />
-              <h3 className="font-serif text-base font-medium">
-                Related Sample Profiles · Not Verified
-              </h3>
-            </div>
-            
-            <p className="text-xs text-stone-600 leading-relaxed">
-              These profile fixtures illustrate a possible connection between a record and practitioners; no identity, consent, or relationship is verified here.
-            </p>
-
+          <section aria-labelledby="related-makers">
+            <h2 id="related-makers" className="text-[1.6rem]">Linked makers</h2>
+            <p className="mt-2 text-[0.9375rem] text-ink-soft">Sample profiles. No identity, consent or relationship is verified.</p>
             {artisans.length === 0 ? (
-              <div className="p-4 bg-white rounded-lg border border-stone-200 text-xs text-stone-500">
-                No sample profile is linked to this record in the local fixture data.
-              </div>
+              <p className="mt-4">No sample profile is linked to this record.</p>
             ) : (
-              <div className="space-y-3">
+              <ul className="mt-4 space-y-3">
                 {artisans.map((artisan) => (
-                  <a
-                    key={artisan.id}
-                    href={`#/artisans/${artisan.slug}`}
-                    onClick={(event) => { event.preventDefault(); navigate(`/artisans/${artisan.slug}`); }}
-                    className="p-3.5 bg-white rounded-lg border border-stone-200 hover:border-[#8A68C7] transition-all flex items-center gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#34205B]"
-                  >
-                    <img
-                      src={artisan.avatarUrl}
-                      alt={artisan.displayName}
-                      className="w-12 h-12 rounded-full object-cover shrink-0 border border-stone-200"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-xs text-[#34205B] group-hover:text-[#8A68C7] truncate">
-                        {artisan.displayName}
-                      </h4>
-                      <p className="text-[11px] text-stone-500 truncate">{artisan.craft}</p>
-                      <div className="flex items-center gap-1 text-[10px] text-stone-400 mt-0.5">
-                        <MapPin className="w-2.5 h-2.5 text-[#8A68C7]" />
-                        <span>{artisan.publicLocation}</span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-stone-400 group-hover:translate-x-1 group-hover:text-[#34205B] transition-all" />
-                  </a>
+                  <li key={artisan.id}>
+                    <Link to={`/artisans/${artisan.slug}`} className="group flex items-center gap-4 no-underline">
+                      <Monogram name={artisan.displayName} craft={artisan.craftKey} />
+                      <span>
+                        <span className="display block text-[1.35rem] group-hover:underline">{artisan.displayName}</span>
+                        <span className="text-[0.9375rem] text-ink-soft">{artisan.publicLocation}</span>
+                      </span>
+                    </Link>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-          </div>
+          </section>
 
-          {/* Ask AI Prompt Widget */}
-          <div className="bg-white rounded-xl border border-[#D7C8B3] p-5 space-y-3 text-xs">
-            <h4 className="font-serif font-medium text-sm text-[#34205B]">
-              Explore sample Q&A about this craft
-            </h4>
-            <p className="text-stone-600 leading-relaxed">
-              Preview a canned sample response; no AI service or live retrieval is connected.
-            </p>
-            <button
-              onClick={() => navigate('/ask')}
-              className="w-full py-2 text-xs font-medium text-[#34205B] bg-[#F4EFE5] hover:bg-[#D7C8B3]/50 border border-[#D7C8B3] rounded-md transition-colors cursor-pointer"
-            >
-              Ask CultureLens →
-            </button>
-          </div>
-
-        </div>
-
+          <section aria-labelledby="ask-more">
+            <h2 id="ask-more" className="text-[1.6rem]">Questions about this craft</h2>
+            <p className="mt-2 text-[0.9375rem] text-ink-soft">The Q&amp;A page returns canned sample answers. No AI service is connected.</p>
+            <Link to="/ask" className="btn btn-quiet mt-3">Ask CultureLens</Link>
+          </section>
+        </aside>
       </div>
-
-    </div>
+    </article>
   );
 };
